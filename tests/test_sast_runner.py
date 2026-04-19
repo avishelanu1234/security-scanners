@@ -17,5 +17,15 @@ class TestSQLConcatenationDetection(unittest.TestCase):
         result = check_sql_concatenation(findings)
         self.assertEqual(result, [('', 'hello'), ('', 'world')])
 
+    def test_sql_with_spaces(self):
+        findings = "username + ' secret'"
+        result = check_sql_concatenation(findings)
+        self.assertEqual(result, [('username', ' secret')])
+
+    def test_multiple_concatenation(self):
+        findings = "'hello' + ' ' + 'world'"
+        result = check_sql_concatenation(findings)
+        self.assertEqual(result, [('', 'hello'), ('', ' '), ('', 'world')])
+
 if __name__ == '__main__':
     unittest.main()

@@ -10,7 +10,8 @@ def run_semgrep(repo_path: str) -> dict:
     return {'repo': repo_path, 'findings': result.stdout}
 
 # Enhanced SQL string concatenation regex pattern detection
-SQL_CONCAT_PATTERN = r"(\w+)\s*\+\s*(\w+|'.*?')"  # Updated pattern for SQL string concatenation detection
+# Updated to prevent SQL injection vulnerabilities
+SQL_CONCAT_PATTERN = r"(\w+)\s*\+\s*(\w+|'.*?')"  # Avoid using + for SQL concatenation
 
 # Function to check for SQL string concatenation in findings
 def check_sql_concatenation(findings: str) -> list:

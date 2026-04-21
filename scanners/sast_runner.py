@@ -41,8 +41,8 @@ def get_user_data(username):
 
 def detect_vulnerabilities(user_input):
     vulnerabilities = []
-    # Example rule: Check for SQL injection patterns in the input
-    if re.search(r'(\bSELECT\b|\bINSERT\b|\bUPDATE\b|\bDELETE\b)', user_input, re.IGNORECASE):
+    # Enhanced rule: Check for SQL injection patterns in the input
+    if re.search(r'(?i)(SELECT|INSERT|UPDATE|DELETE|;|--|\|\\)', user_input):
         vulnerabilities.append("Potential SQL Injection detected.")
     return vulnerabilities
 
@@ -61,7 +61,6 @@ def detect_cloud_vulnerabilities(user_input):
         vulnerabilities.append("Potential API key exposed.")
     
     # Add checks for other cloud providers
-    # For example, Azure and Google Cloud credentials
     # Check for Azure credentials
     if re.search(r'AZURE[A-Z0-9]{40}', user_input):
         vulnerabilities.append("Potential Azure credential exposed.")

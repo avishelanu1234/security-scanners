@@ -1,4 +1,5 @@
 import pytest
+import re
 
 # Test cases for validating the updated whitelist patterns
 

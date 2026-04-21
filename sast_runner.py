@@ -1,14 +1,20 @@
 import sqlite3
 import logging
 import re
+from flask_limiter import Limiter
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+# Initialize rate limiter
+limiter = Limiter(key_func=lambda: 'user')  # Placeholder for user identification
 
 # Maintain a single database connection
 connection = sqlite3.connect('database.db')
 
 # Function to get user data securely
+
+@limiter.limit("5 per minute")  # Limit to 5 requests per minute
 
 def get_user_data(username):
     # Enhanced input validation using regex
@@ -43,7 +49,7 @@ def detect_vulnerabilities(input_string):
         r'^[\w_.+-]+@[\w-]+\.[a-zA-Z]{2,}$',  # Valid email format
         r'^[\w_]+$',  # Alphanumeric usernames
         r'^[\d]+$',  # Numeric input
-        r'^[\w_]+@\w+\.\w{2,3}$',  # Shortened email format
+        r'^[\w_]+@[\w]+\.[\w]{2,3}$',  # Shortened email format
         r'^[\d]{1,5}$',  # Numeric input within 1 to 5 digits
         r'^[\w_]+\s*\w*$'  # Two-word usernames
     ]  # Example patterns

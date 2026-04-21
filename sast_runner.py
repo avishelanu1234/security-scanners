@@ -1,5 +1,6 @@
 import sqlite3
 import logging
+import re
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -7,7 +8,8 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 # Function to get user data securely
 
 def get_user_data(username):
-    if not isinstance(username, str) or not username or len(username) > 50:
+    # Enhanced input validation using regex
+    if not isinstance(username, str) or not username or len(username) > 50 or not re.match(r'^[\w_]+$', username):
         raise ValueError("Invalid username input.")  # Validate user input
     
     try:

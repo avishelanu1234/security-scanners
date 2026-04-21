@@ -1,9 +1,13 @@
 import sqlite3
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Function to get user data securely
 
 def get_user_data(username):
-    if not isinstance(username, str) or not username:
+    if not isinstance(username, str) or not username or len(username) > 50:
         raise ValueError("Invalid username input.")  # Validate user input
     
     try:
@@ -15,14 +19,18 @@ def get_user_data(username):
             query = "SELECT * FROM users WHERE username = ?"
             cursor.execute(query, (username,))
             
-            # Fetch and return data
-            return cursor.fetchall()
+            # Fetch and return data as a dictionary
+            columns = [column[0] for column in cursor.description]
+            result = cursor.fetchone()
+            if result:
+                return dict(zip(columns, result))  # Convert to dictionary
+            return None  # No user found
     except sqlite3.Error as e:
-        print(f"Database error: {e}")  # Error handling
+        logging.error(f"Database error: {e}")  # Error handling
         return None
     
 # Example usage
 if __name__ == '__main__':
-    user_input = "example_user"  # This should come from a safe input method
+    user_input = input("Enter username: ").strip()  # Dynamic input
     result = get_user_data(user_input)
     print(result)

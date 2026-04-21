@@ -17,6 +17,10 @@ class TestSQLInjectionDetection(unittest.TestCase):
             'user name',
             'user name.',
             'user-name 123',
+            'user.name@test.com',  # Valid email format
+            'user_name123',  # Alphanumeric with underscore
+            'user-name-123',  # Hyphenated
+            'user name 123',  # Spaces in usernames
         ]
         for input_str in valid_inputs:
             with self.subTest(input=input_str):
@@ -32,6 +36,9 @@ class TestSQLInjectionDetection(unittest.TestCase):
             'user; SELECT * FROM users;',  # Union injection
             '1 OR 1=1',  # Logic injection
             'user/*comment*/name',  # Comment injection with wildcard
+            'user; --',  # Comment injection with SQL
+            '1; EXEC xp_cmdshell('dir');',  # Command injection
+            'user_name; DROP DATABASE;',  # SQL injection with database drop
         ]
         for input_str in invalid_inputs:
             with self.subTest(input=input_str):

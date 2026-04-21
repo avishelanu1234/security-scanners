@@ -1,34 +1,40 @@
-import subprocess
+import sqlite3
+import cProfile
+import pstats
+import io
 
-REPOS = ['payments-core', 'api-gateway', 'auth-service', 'transaction-engine']
+# Function to get user data securely
 
-def run_semgrep(repo_path: str) -> dict:
-    result = subprocess.run(
-        ['semgrep', '--config=auto', '--json', repo_path],
-        capture_output=True, text=True
-    )
-    return {'repo': repo_path, 'findings': result.stdout}
+def get_user_data(username):
+    if not isinstance(username, str) or not username:
+        raise ValueError("Invalid username input.")
+    
+    try:
+        with sqlite3.connect('database.db') as conn:
+            cursor = conn.cursor()
+            query = "SELECT * FROM users WHERE username = ?"
+            cursor.execute(query, (username,))
+            return cursor.fetchone()  # Use fetchone() for single user data
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")  # Error handling
+        return None
 
-# Enhanced SQL string concatenation regex pattern detection
-# Updated to prevent SQL injection vulnerabilities
-SQL_CONCAT_PATTERN = r"(\w+)\s*\+\s*(\w+|'.*?')"  # Avoid using + for SQL concatenation
+# Performance testing function
 
-# Additional patterns for SQL injection detection
-SQL_INJECTION_PATTERNS = [
-    r"(?i)(SELECT|INSERT|UPDATE|DELETE)\s+.*?\s+FROM\s+.*?\s+WHERE\s+.*?\s*=\s*.*?",
-    r"(?i)(SELECT|INSERT|UPDATE|DELETE)\s+.*?\s+FROM\s+.*?\s+\+\s*.*?",
-    r"(?i)(\w+)\.format\(.*?\)",  # Detects .format usage
-    r"(?i)(\w+)\s*\%\s*.*?"  # Detects % formatting
-]
+def profile_function():
+    user_input = "example_user"  # Example username
+    result = get_user_data(user_input)
+    print(result)
 
-# Function to check for SQL string concatenation and injection patterns in findings
-
-def check_sql_patterns(findings: str) -> list:
-    import re
-    matches = []
-    # Check for SQL string concatenation
-    matches.extend(re.findall(SQL_CONCAT_PATTERN, findings))
-    # Check for SQL injection patterns
-    for pattern in SQL_INJECTION_PATTERNS:
-        matches.extend(re.findall(pattern, findings))
-    return matches
+if __name__ == '__main__':
+    pr = cProfile.Profile()
+    pr.enable()
+    
+    profile_function()
+    
+    pr.disable()
+    s = io.StringIO()
+    sortby = pstats.SortKey.CUMULATIVE
+    ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+    ps.print_stats()
+    print(s.getvalue())

@@ -6,6 +6,7 @@ import re
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Function to get user data securely
+
 def get_user_data(username):
     # Enhanced input validation using regex
     if not isinstance(username, str) or not username or len(username) > 50 or not re.match(r'^[\w_]+$', username):
@@ -31,9 +32,26 @@ def get_user_data(username):
     except sqlite3.Error as e:
         logging.error(f"Database error for user '{username}': {e}")
         raise  # Re-raise the exception for further handling
+
+# SQL injection detection logic
+
+def detect_vulnerabilities(input_string):
+    # Whitelist of acceptable patterns (example)
+    acceptable_patterns = [r'^[\w_]+$', r'^[\d]+$']  # Example patterns
     
-# Example usage
+    # Check against the whitelisted patterns
+    if any(re.match(pattern, input_string) for pattern in acceptable_patterns):
+        logging.info("Input is valid.")
+        return False  # No vulnerabilities detected
+    else:
+        logging.warning("Potential SQL injection detected!")
+        return True  # Potential vulnerability
+
+# Example usage of vulnerability detection
 if __name__ == '__main__':
     user_input = input("Enter username: ").strip()  # Dynamic input
-    result = get_user_data(user_input)
-    print(result)
+    if detect_vulnerabilities(user_input):
+        print("Potential SQL injection detected!")
+    else:
+        result = get_user_data(user_input)
+        print(result)

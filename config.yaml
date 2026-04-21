@@ -2,8 +2,7 @@
 
 # Whitelist for known false positives
 whitelist:
-  - hardcoded_api_key
-  - known_secret
+  # Removed sensitive entries to ensure actual secrets are not ignored during scans
 
 # Sensitivity level for scanning
 sensitivity_level: medium

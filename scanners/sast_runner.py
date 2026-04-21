@@ -1,40 +1,38 @@
 import sqlite3
-import cProfile
-import pstats
-import io
+import logging
+import re  # Import regex module
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Function to get user data securely
 
 def get_user_data(username):
-    if not isinstance(username, str) or not username:
-        raise ValueError("Invalid username input.")
+    # Regex for valid username (alphanumeric, 1-50 characters)
+    if not re.match('^[a-zA-Z0-9]{1,50}$', username):
+        raise ValueError("Invalid username input. Must be alphanumeric and 1-50 characters long.")  # Validate user input
     
     try:
+        # Connect to the database
         with sqlite3.connect('database.db') as conn:
             cursor = conn.cursor()
+            
+            # Use parameterized query to prevent SQL injection
             query = "SELECT * FROM users WHERE username = ?"
             cursor.execute(query, (username,))
-            return cursor.fetchone()  # Use fetchone() for single user data
+            
+            # Fetch and return data as a dictionary
+            columns = [column[0] for column in cursor.description]
+            result = cursor.fetchone()
+            if result:
+                return dict(zip(columns, result))  # Convert to dictionary
+            return None  # No user found
     except sqlite3.Error as e:
-        print(f"Database error: {e}")  # Error handling
+        logging.error(f"Database error: {e}")  # Error handling
         return None
-
-# Performance testing function
-
-def profile_function():
-    user_input = "example_user"  # Example username
+    
+# Example usage
+if __name__ == '__main__':
+    user_input = input("Enter username: ").strip()  # Dynamic input
     result = get_user_data(user_input)
     print(result)
-
-if __name__ == '__main__':
-    pr = cProfile.Profile()
-    pr.enable()
-    
-    profile_function()
-    
-    pr.disable()
-    s = io.StringIO()
-    sortby = pstats.SortKey.CUMULATIVE
-    ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
-    ps.print_stats()
-    print(s.getvalue())

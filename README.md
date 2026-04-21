@@ -1,94 +1,24 @@
 # Security Scanners
 
-## Overview
-**Security Scanners** is a suite of tools designed for Static Application Security Testing (SAST), dependency scanning, and secrets detection tailored for NovaPay. This repository aims to enhance the security posture of applications by identifying potential vulnerabilities and enforcing best practices.
-
-## Features
-- **SAST**: Analyze source code for vulnerabilities.
-- **Dependency Scanning**: Identify outdated or vulnerable dependencies.
-- **Secrets Detection**: Detect hardcoded secrets such as API keys, passwords, and tokens in your codebase.
-
-## Installation
-To install the security scanners, clone the repository and install the required dependencies:
-
-```bash
-git clone https://github.com/avishelanu1234/security-scanners.git
-cd security-scanners
-pip install -r requirements.txt  # Install dependencies
-```
-
-**Note:** Ensure you are using Python 3.6 or higher for compatibility. You may need to install system packages like `git` and `pip` if not already installed.
-
-## Configuration
-Before running the scanners, please ensure that you configure them according to your environment. Here are some configuration options:
-
-- **Database Configuration**: Ensure your database connection settings are correctly configured in your code (e.g., `DB_HOST`, `DB_USER`, `DB_PASS`).
-- **Environment Variables**: Set necessary environment variables for the scanners to access sensitive data securely (e.g., `SECRET_KEY`, `API_TOKEN`).
-- **Example configuration (`config.yaml`):**  
+## Managing False Positives
+- **Configure Sensitivity Levels**: Adjust settings in the configuration file to minimize irrelevant alerts based on your project's needs. Consider setting thresholds that reflect the acceptable risk for your organization.
+- **Implement a Whitelist**: Add known false positives to a whitelist for streamlined review. Below is an example of how to configure the whitelist in your `config.yaml`:
   ```yaml
-  database:
-    host: your_db_host
-    user: your_db_user
-    password: your_db_password
-  secrets:
-    api_token: your_api_token
+  whitelist:
+    - "hardcoded_api_key"
+    - "known_secret"
+    - "test_api_key"
+    - "example_secret"
   ```
 
-## Usage
-To run the security scanners with configuration options, execute the following command:
+- **Review and Update Regularly**: Periodically review the whitelist and sensitivity settings to ensure they remain effective as your project evolves and new false positives may arise. Update the configurations to reflect any changes in your codebase.
 
-```bash
-python sast_runner.py --config config.yaml
-```
+- **Documentation**: Document any false positives and their corresponding whitelisting in a separate file or section within your project to maintain awareness among team members and future contributors.
 
-### Example
-```python
-# Example usage
-if __name__ == '__main__':
-    user_input = input("Enter username: ")  # Secure user input
-    result = get_user_data(user_input)
-    print(result)
-```
+## Recommendations for Improved Detection Accuracy
+1. **Regularly Update Rules**: Keep your scanning rules and configurations up to date with the latest vulnerability definitions and best practices.
+2. **Feedback Loop**: Implement a feedback loop where developers can report false positives, and use this information to refine scanning rules and update the whitelist accordingly.
+3. **Testing Environment**: Use a dedicated testing environment for scanning to reduce the likelihood of false positives from production data.
 
-## Best Practices
-- **Input Validation**: Always validate and sanitize user inputs to prevent injection attacks.
-- **Error Handling**: Implement comprehensive error handling to gracefully manage exceptions and avoid exposing sensitive information.
-- **Regular Updates**: Regularly update dependencies to their latest secure versions to mitigate vulnerabilities.
-- **CI/CD Integration**: Integrate the security scanners into your CI/CD pipeline for continuous security monitoring.
-- **Optimize Scanning**:  
-  - Enable parallel scanning by adjusting the configuration settings to reduce runtime. Consider using the command:  
-    ```bash
-    python sast_runner.py --config config.yaml --parallel
-    ```  
-  - Use incremental scanning to focus only on changes, enhancing efficiency by analyzing modified files only.  
-    Example command for incremental scanning:  
-    ```bash
-    python sast_runner.py --config config.yaml --incremental
-    ```
-- **Manage False Positives**:  
-  - Configure sensitivity levels to minimize irrelevant alerts. For example, set thresholds based on your project's needs in the configuration file.
-  - Implement a whitelist for known false positives to streamline the review process. Example:  
-    ```yaml
-    whitelist:
-      - "hardcoded_api_key"
-      - "known_secret"
-    ```
-
-## Handling Findings
-When vulnerabilities or secrets are detected:
-1. **Review the Findings**: Analyze the report generated by the scanners.
-2. **Prioritize Remediation**: Address critical vulnerabilities first, following your organization's risk management policies.
-3. **Secure Secrets**: Rotate any exposed secrets and update them in your application securely.
-4. **Use Tracking Tools**: Consider using tools like JIRA or GitHub Issues to manage identified vulnerabilities and remediation efforts.
-
-## Dependencies
-Maintain awareness of your application's dependencies. Regularly check for updates and vulnerabilities in third-party libraries. Use tools like [Dependabot](https://github.com/dependabot) for automated dependency updates and consider [Snyk](https://snyk.io/) for additional monitoring.
-
-## Contributing
-Contributions are welcome! Please read the [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on contributing to this repository. Current areas for contribution include fixing bugs, improving documentation, and enhancing scanning features.
-
-## License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Contact
-For any questions or support, please contact [your-email@example.com].
+## Conclusion
+By implementing these strategies to manage false positives, you can improve the accuracy of your security scanners and reduce unnecessary alerts, allowing your team to focus on genuine vulnerabilities.

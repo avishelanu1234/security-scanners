@@ -4,12 +4,9 @@
 whitelist:
   - hardcoded_api_key
   - known_secret
-  - legacy_token
-  - temp_password
-  - test_api_key
 
 # Sensitivity level for scanning
-sensitivity_level: low
+sensitivity_level: medium
 
 # Parameters for scanning
 scanning_parameters:

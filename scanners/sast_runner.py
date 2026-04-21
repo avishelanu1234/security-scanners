@@ -38,13 +38,28 @@ def detect_vulnerabilities(user_input):
     # Example rule: Check for SQL injection patterns in the input
     if re.search(r'(\bSELECT\b|\bINSERT\b|\bUPDATE\b|\bDELETE\b)', user_input, re.IGNORECASE):
         vulnerabilities.append("Potential SQL Injection detected.")
-    # Add more detection rules as needed
+    return vulnerabilities
+
+# Function to detect cloud-specific vulnerabilities
+
+def detect_cloud_vulnerabilities(user_input):
+    vulnerabilities = detect_vulnerabilities(user_input)  # Existing SQL injection check
+    # Add cloud-specific checks
+
+    # Check for exposed AWS credentials
+    if re.search(r'AWS[A-Z0-9]{20}', user_input):
+        vulnerabilities.append("Potential AWS credential exposed.")
+    
+    # Check for exposed API keys
+    if re.search(r'(?i)[A-Za-z0-9]{32,}', user_input):  # Example pattern for API keys
+        vulnerabilities.append("Potential API key exposed.")
+    
     return vulnerabilities
 
 # Example usage
 if __name__ == '__main__':
     user_input = input("Enter username: ").strip()  # Dynamic input
-    vulnerabilities = detect_vulnerabilities(user_input)
+    vulnerabilities = detect_cloud_vulnerabilities(user_input)  # Use new function
     if vulnerabilities:
         for vulnerability in vulnerabilities:
             logging.warning(vulnerability)  # Log vulnerabilities

@@ -21,7 +21,7 @@
    - Implements a whitelist approach to check input against predefined patterns.  
    - Code Snippet:
      ```python
-     acceptable_patterns = [r'^[\w_]+$', r'^[\d]+$']
+     acceptable_patterns = [r'^[\w_]+$', r'^[\d]+$', r'^[\s\w.-]+@[\w.-]+\.\w+$']  # Added email pattern
      if any(re.match(pattern, input_string) for pattern in acceptable_patterns):
          logging.info("Input is valid.")
          return False  # No vulnerabilities detected
@@ -33,13 +33,26 @@
 ## Suggested Improvements
 
 1. **Expand Whitelist Patterns**:  
-   - Add more comprehensive regex patterns to cover a broader range of valid inputs for usernames.
+   - Add more comprehensive regex patterns to cover a broader range of valid inputs for usernames, including an email pattern for validation.
 
 2. **Implement Rate Limiting**:  
    - Introduce rate limiting for user input attempts to prevent brute force attacks.
+   - Example:
+     ```python
+     from flask_limiter import Limiter
+     limiter = Limiter(app, key_func=get_remote_address)
+
+     @limiter.limit("5 per minute")  # Limit to 5 requests per minute
+     def submit_form():
+         pass
+     ```
 
 3. **Logging and Monitoring**:  
    - Enhance logging to capture contextual information like the source of the request (IP address) and the number of failed attempts.
+   - Code Snippet:
+     ```python
+     logging.warning(f"Potential SQL injection detected from {request.remote_addr}!")
+     ```
 
 4. **Sanitize Input**:  
    - Implement additional input sanitization techniques to escape special characters not covered by regex patterns.

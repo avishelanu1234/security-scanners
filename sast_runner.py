@@ -43,10 +43,13 @@ def detect_vulnerabilities(input_string):
         r'^[\w_.+-]+@[\w-]+\.[a-zA-Z]{2,}$',  # Valid email format
         r'^[\w_]+$',  # Alphanumeric usernames
         r'^[\d]+$',  # Numeric input
-        r'^[\w_]+@\w+\.\w{2,3}$',  # Shortened email format
+        r'^[\w_]+@[\w]+\.[\w]{2,3}$',  # Shortened email format
         r'^[\d]{1,5}$',  # Numeric input within 1 to 5 digits
-        r'^[\w_]+\s*\w*$'  # Two-word usernames
-    ]  # Example patterns
+        r'^[\w_]+\s*\w*$',  # Two-word usernames
+        r'^[\-a-zA-Z]+$',  # Allow hyphenated words
+        r'^[\w\s]+$',  # Alphanumeric with spaces
+        r'^[\w\s]+[\.\,\'\"\-]+[\w\s]+$'  # Allows punctuation between words
+    ]
     
     # Check against the whitelisted patterns
     if any(re.match(pattern, input_string) for pattern in acceptable_patterns):

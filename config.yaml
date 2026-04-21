@@ -14,5 +14,14 @@ scanning_parameters:
 
 # Logging configuration
 logging:
-  level: info
-  format: '%(asctime)s - %(levelname)s - %(message)s'
+  level: info # Consider changing to 'warn' or 'error' during production
+  format: '%(asctime)s - %(levelname)s - %(message)s - User ID: %(user_id)s - IP: %(ip_address)s'
+
+# Log retention policy
+log_retention:
+  duration: '30 days' # Adjust retention duration as needed
+
+# Log analysis and alerts
+log_analysis:
+  enable_alerts: true
+  alert_threshold: 'high' # Set threshold for alerts

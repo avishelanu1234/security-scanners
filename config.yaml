@@ -2,18 +2,20 @@
 
 # Whitelist for known false positives
 whitelist:
-  # Expanded whitelist patterns to include additional valid inputs
+  # Refined whitelist patterns to exclude sensitive patterns
   - pattern: '^[\w_]+$'  # Usernames
   - pattern: '^[\d]{10}$'  # Phone numbers
   - pattern: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'  # Emails
   - pattern: '^[\d\s\w,.-]+$'  # Addresses
+  # Removed sensitive entries
 
 # Sensitivity level for scanning
-sensitivity_level: medium
+sensitivity_level: high  # Adjusted to high based on threat landscape
 
 # Parameters for scanning
 scanning_parameters:
   enable_incremental_scanning: true
+  enable_full_scanning: true  # Added to ensure regular full scans
   enable_parallel_scanning: true
   rate_limiting:
     enabled: true
@@ -22,7 +24,7 @@ scanning_parameters:
 # Logging configuration
 logging:
   level: warn  # Set to 'warn' for production
-  format: '%(asctime)s - %(levelname)s - %(message)s - User ID: %(user_id)s - IP: %(ip_address)s'
+  format: '%(asctime)s - %(levelname)s - %(message)s'
 
 # Log retention policy
 log_retention:
@@ -32,7 +34,7 @@ log_retention:
 log_analysis:
   enable_alerts: true
   alert_threshold: 'high'  # Set threshold for alerts
-  contextual_logging: true  # Enable logging of contextual information like IP address
+  contextual_logging: true  # Enable logging of contextual information
 
 # Input sanitization configurations
 input_sanitization:
@@ -47,7 +49,7 @@ security_headers:
   headers:
     - 'X-Content-Type-Options: nosniff'
     - 'X-Frame-Options: DENY'
-    - 'Content-Security-Policy: default-src 'self''
+    - 'Content-Security-Policy: default-src self'
     - 'Strict-Transport-Security: max-age=31536000; includeSubDomains'
 
 # Testing and validation schedule

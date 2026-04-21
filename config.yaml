@@ -1,63 +1,37 @@
-# Configuration for Security Scanners
+# config.yaml
 
-# Whitelist for known false positives
+# Database Configuration
+# Ensure your database connection settings are correctly configured.
+database:
+  host: your_db_host
+  user: your_db_user
+  password: your_db_password
+
+# Secrets Configuration
+# Store sensitive information securely.
+secrets:
+  api_token: your_api_token
+
+# Whitelist Configuration
+# Add known false positives to the whitelist.
 whitelist:
-  # Refined whitelist patterns to exclude sensitive patterns
-  - pattern: '^[a-zA-Z0-9._%+-]+$'  # Usernames (consider specific requirements)
-  - pattern: '^\+?[1-9]\d{1,14}$'  # Phone numbers (international format)
-  - pattern: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'  # Emails
-  - pattern: '^[\d\s\w,.-]+$'  # Addresses (review for specific needs)
+  - "hardcoded_api_key"
+  - "known_secret"
+  - "test_api_key"
+  - "example_secret"
 
-# Sensitivity level for scanning
-sensitivity_level: high  # Adjusted to high based on threat landscape
+# Sensitivity Levels
+# Adjust these settings to minimize irrelevant alerts.
+sensitivity:
+  level: medium
 
-# Parameters for scanning
-scanning_parameters:
-  enable_incremental_scanning: true
-  enable_full_scanning: true  # Added to ensure regular full scans
-  enable_parallel_scanning: true
-  rate_limiting:
-    enabled: true
-    limit: '10 per minute'  # Adjusted rate limit for sensitive endpoints
+# Scanning Rules
+# Define your scanning rules based on the latest best practices.
+scanning_rules:
+  enable_sensitive_detection: true
+  enable_dependency_scanning: true
+  enable_secrets_detection: true
+  max_false_positive_rate: 5%
 
-# Logging configuration
-logging:
-  level: warn  # Set to 'warn' for production
-  format: '%(asctime)s - %(levelname)s - %(message)s'
-
-# Log retention policy
-log_retention:
-  duration: '30 days'  # Adjust retention duration as needed
-
-# Log analysis and alerts
-log_analysis:
-  enable_alerts: true
-  alert_threshold: 'high'  # Set threshold for alerts
-  contextual_logging: true  # Enable logging of contextual information
-
-# Input sanitization configurations
-input_sanitization:
-  enabled: true
-  methods:
-    - escape_special_chars: true
-    - use_prepared_statements: true  # Ensure all DB interactions use prepared statements
-
-# Security headers configuration
-security_headers:
-  enabled: true
-  headers:
-    - 'X-Content-Type-Options: nosniff'
-    - 'X-Frame-Options: DENY'
-    - 'Content-Security-Policy: default-src self'
-    - 'Strict-Transport-Security: max-age=31536000; includeSubDomains'
-
-# Testing and validation schedule
-testing:
-  enabled: true
-  frequency: bi-weekly  # Increased frequency for regular tests against known SQL injection payloads
-
-# User feedback configurations
-user_feedback:
-  enabled: true
-  messages:
-    invalid_input: 'The input provided is invalid. Please ensure it meets the required format.'
+# Additional Recommendations
+# Regularly update rules based on feedback from developers.

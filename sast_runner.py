@@ -5,30 +5,32 @@ import re
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+# Maintain a single database connection
+connection = sqlite3.connect('database.db')
+
 # Function to get user data securely
 
 def get_user_data(username):
     # Enhanced input validation using regex
-    if not isinstance(username, str) or not username or len(username) > 50 or not re.match(r'^[\w_]+$', username):
+    username_pattern = re.compile(r'^[\w_]{1,50}$')  # Compiled regex for username validation
+    if not isinstance(username, str) or not username_pattern.match(username):
         raise ValueError("Invalid username input.")  # Validate user input
     
     try:
-        # Connect to the database
-        with sqlite3.connect('database.db') as conn:
-            cursor = conn.cursor()
-            
-            # Use parameterized query to prevent SQL injection
-            query = "SELECT id, username, email FROM users WHERE username = ?"
-            cursor.execute(query, (username,))
-            
-            result = cursor.fetchone()
-            if result:
-                return {
-                    "id": result[0],
-                    "username": result[1],
-                    "email": result[2]
-                }
-            return None  # No user found
+        cursor = connection.cursor()
+        
+        # Use parameterized query to prevent SQL injection
+        query = "SELECT id, username, email FROM users WHERE username = ?"
+        cursor.execute(query, (username,))
+        
+        result = cursor.fetchone()
+        if result:
+            return {
+                "id": result[0],
+                "username": result[1],
+                "email": result[2]
+            }
+        return None  # No user found
     except sqlite3.Error as e:
         logging.error(f"Database error for user '{username}': {e}")
         raise  # Re-raise the exception for further handling

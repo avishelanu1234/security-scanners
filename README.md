@@ -44,6 +44,12 @@ if __name__ == '__main__':
 - **Error Handling**: Implement comprehensive error handling to gracefully manage exceptions and avoid exposing sensitive information.
 - **Regular Updates**: Regularly update dependencies to their latest secure versions to mitigate vulnerabilities.
 - **CI/CD Integration**: Integrate the security scanners into your CI/CD pipeline for continuous security monitoring.
+- **Optimize Scanning**: 
+  - Enable parallel scanning to reduce runtime.
+  - Use incremental scanning to focus only on changes, enhancing efficiency.
+- **Manage False Positives**:
+  - Configure sensitivity levels to minimize irrelevant alerts.
+  - Implement a whitelist for known false positives to streamline the review process.
 
 ## Handling Findings
 When vulnerabilities or secrets are detected:

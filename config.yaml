@@ -3,11 +3,10 @@
 # Whitelist for known false positives
 whitelist:
   # Refined whitelist patterns to exclude sensitive patterns
-  - pattern: '^[\w_]+$'  # Usernames
-  - pattern: '^[\d]{10}$'  # Phone numbers
+  - pattern: '^[a-zA-Z0-9._%+-]+$'  # Usernames (consider specific requirements)
+  - pattern: '^\+?[1-9]\d{1,14}$'  # Phone numbers (international format)
   - pattern: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'  # Emails
-  - pattern: '^[\d\s\w,.-]+$'  # Addresses
-  # Removed sensitive entries
+  - pattern: '^[\d\s\w,.-]+$'  # Addresses (review for specific needs)
 
 # Sensitivity level for scanning
 sensitivity_level: high  # Adjusted to high based on threat landscape

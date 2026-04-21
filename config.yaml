@@ -1,0 +1,19 @@
+# Configuration for Security Scanners
+
+# Whitelist for known false positives
+whitelist:
+  - hardcoded_api_key
+  - known_secret
+
+# Sensitivity level for scanning
+sensitivity_level: medium
+
+# Parameters for scanning
+scanning_parameters:
+  enable_incremental_scanning: true
+  enable_parallel_scanning: true
+
+# Logging configuration
+logging:
+  level: info
+  format: '%(asctime)s - %(levelname)s - %(message)s'

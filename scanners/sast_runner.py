@@ -27,6 +27,12 @@ def get_user_data(username):
             if result:
                 return dict(zip(columns, result))  # Convert to dictionary
             return None  # No user found
+    except sqlite3.IntegrityError as e:
+        logging.error(f"Database integrity error: {e}")  # Error handling
+        return None
+    except sqlite3.OperationalError as e:
+        logging.error(f"Database operational error: {e}")  # Error handling
+        return None
     except sqlite3.Error as e:
         logging.error(f"Database error: {e}")  # Error handling
         return None
@@ -53,6 +59,16 @@ def detect_cloud_vulnerabilities(user_input):
     # Check for exposed API keys
     if re.search(r'(?i)[A-Za-z0-9]{32,}', user_input):  # Example pattern for API keys
         vulnerabilities.append("Potential API key exposed.")
+    
+    # Add checks for other cloud providers
+    # For example, Azure and Google Cloud credentials
+    # Check for Azure credentials
+    if re.search(r'AZURE[A-Z0-9]{40}', user_input):
+        vulnerabilities.append("Potential Azure credential exposed.")
+    
+    # Check for Google Cloud credentials
+    if re.search(r'AIza[0-9A-Za-z-_]{35}', user_input):
+        vulnerabilities.append("Potential Google Cloud API key exposed.")
     
     return vulnerabilities
 

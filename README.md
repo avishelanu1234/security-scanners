@@ -56,15 +56,23 @@ if __name__ == '__main__':
 - **Regular Updates**: Regularly update dependencies to their latest secure versions to mitigate vulnerabilities.
 - **CI/CD Integration**: Integrate the security scanners into your CI/CD pipeline for continuous security monitoring.
 - **Optimize Scanning**:  
-  - Enable parallel scanning by adjusting the configuration settings to reduce runtime.
-  - Use incremental scanning to focus only on changes, enhancing efficiency.  
-  - Example command for parallel scanning:  
+  - Enable parallel scanning by adjusting the configuration settings to reduce runtime. Consider using the command:  
     ```bash
     python sast_runner.py --config config.yaml --parallel
+    ```  
+  - Use incremental scanning to focus only on changes, enhancing efficiency by analyzing modified files only.  
+    Example command for incremental scanning:  
+    ```bash
+    python sast_runner.py --config config.yaml --incremental
     ```
 - **Manage False Positives**:  
-  - Configure sensitivity levels to minimize irrelevant alerts.
-  - Implement a whitelist for known false positives to streamline the review process.
+  - Configure sensitivity levels to minimize irrelevant alerts. For example, set thresholds based on your project's needs in the configuration file.
+  - Implement a whitelist for known false positives to streamline the review process. Example:  
+    ```yaml
+    whitelist:
+      - "hardcoded_api_key"
+      - "known_secret"
+    ```
 
 ## Handling Findings
 When vulnerabilities or secrets are detected:

@@ -11,23 +11,25 @@ def get_user_data(username):
         raise ValueError("Invalid username input.")  # Validate user input
     
     try:
-        # Connect to the database
+        # Connect to the database (consider using connection pooling for better performance)
         with sqlite3.connect('database.db') as conn:
             cursor = conn.cursor()
             
-            # Use parameterized query to prevent SQL injection
-            query = "SELECT * FROM users WHERE username = ?"
+            # Specify only necessary columns
+            query = "SELECT id, username, email FROM users WHERE username = ?"
             cursor.execute(query, (username,))
             
-            # Fetch and return data as a dictionary
-            columns = [column[0] for column in cursor.description]
             result = cursor.fetchone()
             if result:
-                return dict(zip(columns, result))  # Convert to dictionary
+                return {
+                    "id": result[0],
+                    "username": result[1],
+                    "email": result[2]
+                }
             return None  # No user found
     except sqlite3.Error as e:
-        logging.error(f"Database error: {e}")  # Error handling
-        return None
+        logging.error(f"Database error: {e}")
+        raise  # Re-raise the exception for further handling
     
 # Example usage
 if __name__ == '__main__':

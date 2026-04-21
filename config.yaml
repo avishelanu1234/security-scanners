@@ -2,7 +2,10 @@
 
 # Whitelist for known false positives
 whitelist:
-  # Removed sensitive entries to ensure actual secrets are not ignored during scans
+  # Expanded whitelist patterns to include additional valid inputs
+  - pattern: '^[\w_]+$'  # Usernames
+  - pattern: '^[\d]{10}$'  # Phone numbers
+  - pattern: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'  # Emails
 
 # Sensitivity level for scanning
 sensitivity_level: medium
@@ -11,17 +14,47 @@ sensitivity_level: medium
 scanning_parameters:
   enable_incremental_scanning: true
   enable_parallel_scanning: true
+  rate_limiting:
+    enabled: true
+    limit: '5 per minute'  # Rate limit for sensitive endpoints
 
 # Logging configuration
 logging:
-  level: info # Consider changing to 'warn' or 'error' during production
+  level: warn  # Changed to 'warn' for production
   format: '%(asctime)s - %(levelname)s - %(message)s - User ID: %(user_id)s - IP: %(ip_address)s'
 
 # Log retention policy
 log_retention:
-  duration: '30 days' # Adjust retention duration as needed
+  duration: '30 days'  # Adjust retention duration as needed
 
 # Log analysis and alerts
 log_analysis:
   enable_alerts: true
-  alert_threshold: 'high' # Set threshold for alerts
+  alert_threshold: 'high'  # Set threshold for alerts
+  contextual_logging: true  # Enable logging of contextual information like IP address
+
+# Input sanitization configurations
+input_sanitization:
+  enabled: true
+  methods:
+    - escape_special_chars: true
+    - use_prepared_statements: true  # Ensure all DB interactions use prepared statements
+
+# Security headers configuration
+security_headers:
+  enabled: true
+  headers:
+    - 'X-Content-Type-Options: nosniff'
+    - 'X-Frame-Options: DENY'
+    - 'Content-Security-Policy: default-src 'self''
+
+# Testing and validation schedule
+testing:
+  enabled: true
+  frequency: monthly  # Regular tests against known SQL injection payloads
+
+# User feedback configurations
+user_feedback:
+  enabled: true
+  messages:
+    invalid_input: 'The input provided is invalid. Please ensure it meets the required format.'

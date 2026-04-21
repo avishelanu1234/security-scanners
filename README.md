@@ -9,6 +9,8 @@
     - "known_secret"
     - "test_api_key"
     - "example_secret"
+    - "new_false_positive_1"
+    - "new_false_positive_2"
   ```
 
 - **Review and Update Regularly**: Periodically review the whitelist and sensitivity settings to ensure they remain effective as your project evolves and new false positives may arise. Update the configurations to reflect any changes in your codebase.
@@ -21,4 +23,4 @@
 3. **Testing Environment**: Use a dedicated testing environment for scanning to reduce the likelihood of false positives from production data.
 
 ## Conclusion
-By implementing these strategies to manage false positives, you can improve the accuracy of your security scanners and reduce unnecessary alerts, allowing your team to focus on genuine vulnerabilities.
+By implementing these strategies to manage false positives and refining the scanning rules, you can improve the accuracy of your security scanners and reduce unnecessary alerts, allowing your team to focus on genuine vulnerabilities.

@@ -14,20 +14,20 @@ To install the security scanners, clone the repository and install the required 
 ```bash
 git clone https://github.com/avishelanu1234/security-scanners.git
 cd security-scanners
-# Install dependencies (if applicable)
+pip install -r requirements.txt  # Install dependencies
 ```
 
 ## Configuration
 Before running the scanners, please ensure that you configure them according to your environment. Here are some configuration options:
 
-- **Database Configuration**: Ensure that your database connection settings are correctly configured in your code.
-- **Environment Variables**: Set necessary environment variables for the scanners to access sensitive data securely.
+- **Database Configuration**: Ensure your database connection settings are correctly configured in your code (e.g., `DB_HOST`, `DB_USER`, `DB_PASS`).
+- **Environment Variables**: Set necessary environment variables for the scanners to access sensitive data securely (e.g., `SECRET_KEY`, `API_TOKEN`).
 
 ## Usage
-To run the security scanners, execute the following command:
+To run the security scanners with configuration options, execute the following command:
 
 ```bash
-python sast_runner.py
+python sast_runner.py --config config.yaml
 ```
 
 ### Example
@@ -43,6 +43,7 @@ if __name__ == '__main__':
 - **Input Validation**: Always validate and sanitize user inputs to prevent injection attacks.
 - **Error Handling**: Implement comprehensive error handling to gracefully manage exceptions and avoid exposing sensitive information.
 - **Regular Updates**: Regularly update dependencies to their latest secure versions to mitigate vulnerabilities.
+- **CI/CD Integration**: Integrate the security scanners into your CI/CD pipeline for continuous security monitoring.
 
 ## Handling Findings
 When vulnerabilities or secrets are detected:

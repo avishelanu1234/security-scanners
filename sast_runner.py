@@ -1,16 +1,23 @@
-### SQL String Concatenation Vulnerability in sast_runner.py
+# Updated sast_runner.py to prevent SQL injection vulnerabilities
 
-#### Overview
-The `sast_runner.py` file contains a potential SQL string concatenation vulnerability due to the use of the `+` operator for concatenating SQL strings. This could lead to SQL injection attacks, allowing malicious users to execute arbitrary SQL code.
+import sqlite3
 
-#### Proposed Fix
-To mitigate this vulnerability, the proposed approach is to:
-1. Replace the existing SQL concatenation logic with parameterized queries or use safer methods of string formatting that do not expose the application to SQL injection risks.
-2. Implement additional checks to ensure that SQL queries are constructed safely without direct concatenation.
+# Function to get user data securely
 
-#### Changes Made
-- Updated the regular expression pattern used for detecting SQL concatenation to prevent the use of `+` for SQL string concatenation.
-
-#### Next Steps
-- Review the updated code in `sast_runner.py` to ensure that all SQL string concatenations are handled safely.
-- Perform testing to verify that the changes do not affect the functionality of the application.
+def get_user_data(username):
+    # Connect to the database
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+    
+    # Use parameterized query to prevent SQL injection
+    query = "SELECT * FROM users WHERE username = ?"
+    cursor.execute(query, (username,))
+    
+    # Fetch and return data
+    return cursor.fetchall()
+    
+# Example usage
+if __name__ == '__main__':
+    user_input = "example_user"  # This should come from a safe input method
+    result = get_user_data(user_input)
+    print(result)

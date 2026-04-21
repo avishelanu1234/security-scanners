@@ -6,6 +6,7 @@ whitelist:
   - pattern: '^[\w_]+$'  # Usernames
   - pattern: '^[\d]{10}$'  # Phone numbers
   - pattern: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'  # Emails
+  - pattern: '^[\d\s\w,.-]+$'  # Addresses
 
 # Sensitivity level for scanning
 sensitivity_level: medium
@@ -16,11 +17,11 @@ scanning_parameters:
   enable_parallel_scanning: true
   rate_limiting:
     enabled: true
-    limit: '5 per minute'  # Rate limit for sensitive endpoints
+    limit: '10 per minute'  # Adjusted rate limit for sensitive endpoints
 
 # Logging configuration
 logging:
-  level: warn  # Changed to 'warn' for production
+  level: warn  # Set to 'warn' for production
   format: '%(asctime)s - %(levelname)s - %(message)s - User ID: %(user_id)s - IP: %(ip_address)s'
 
 # Log retention policy
@@ -47,11 +48,12 @@ security_headers:
     - 'X-Content-Type-Options: nosniff'
     - 'X-Frame-Options: DENY'
     - 'Content-Security-Policy: default-src 'self''
+    - 'Strict-Transport-Security: max-age=31536000; includeSubDomains'
 
 # Testing and validation schedule
 testing:
   enabled: true
-  frequency: monthly  # Regular tests against known SQL injection payloads
+  frequency: bi-weekly  # Increased frequency for regular tests against known SQL injection payloads
 
 # User feedback configurations
 user_feedback:

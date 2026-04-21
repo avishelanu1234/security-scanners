@@ -13,7 +13,22 @@ def run_semgrep(repo_path: str) -> dict:
 # Updated to prevent SQL injection vulnerabilities
 SQL_CONCAT_PATTERN = r"(\w+)\s*\+\s*(\w+|'.*?')"  # Avoid using + for SQL concatenation
 
-# Function to check for SQL string concatenation in findings
-def check_sql_concatenation(findings: str) -> list:
+# Additional patterns for SQL injection detection
+SQL_INJECTION_PATTERNS = [
+    r"(?i)(SELECT|INSERT|UPDATE|DELETE)\s+.*?\s+FROM\s+.*?\s+WHERE\s+.*?\s*=\s*.*?",
+    r"(?i)(SELECT|INSERT|UPDATE|DELETE)\s+.*?\s+FROM\s+.*?\s+\+\s*.*?",
+    r"(?i)(\w+)\.format\(.*?\)",  # Detects .format usage
+    r"(?i)(\w+)\s*\%\s*.*?"  # Detects % formatting
+]
+
+# Function to check for SQL string concatenation and injection patterns in findings
+
+def check_sql_patterns(findings: str) -> list:
     import re
-    return re.findall(SQL_CONCAT_PATTERN, findings)
+    matches = []
+    # Check for SQL string concatenation
+    matches.extend(re.findall(SQL_CONCAT_PATTERN, findings))
+    # Check for SQL injection patterns
+    for pattern in SQL_INJECTION_PATTERNS:
+        matches.extend(re.findall(pattern, findings))
+    return matches

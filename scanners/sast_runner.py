@@ -31,8 +31,23 @@ def get_user_data(username):
         logging.error(f"Database error: {e}")  # Error handling
         return None
     
+# Function to detect vulnerabilities in user input
+
+def detect_vulnerabilities(user_input):
+    vulnerabilities = []
+    # Example rule: Check for SQL injection patterns in the input
+    if re.search(r'(\bSELECT\b|\bINSERT\b|\bUPDATE\b|\bDELETE\b)', user_input, re.IGNORECASE):
+        vulnerabilities.append("Potential SQL Injection detected.")
+    # Add more detection rules as needed
+    return vulnerabilities
+
 # Example usage
 if __name__ == '__main__':
     user_input = input("Enter username: ").strip()  # Dynamic input
-    result = get_user_data(user_input)
-    print(result)
+    vulnerabilities = detect_vulnerabilities(user_input)
+    if vulnerabilities:
+        for vulnerability in vulnerabilities:
+            logging.warning(vulnerability)  # Log vulnerabilities
+    else:
+        result = get_user_data(user_input)
+        print(result)

@@ -36,15 +36,15 @@ def get_user_data(username):
 # SQL injection detection logic
 
 def detect_vulnerabilities(input_string):
-    # Whitelist of acceptable patterns (example)
-    acceptable_patterns = [r'^[\w_]+$', r'^[\d]+$']  # Example patterns
+    # Expanded whitelist of acceptable patterns to include more variations
+    acceptable_patterns = [r'^[\w_]+$', r'^[\d]+$', r'^[\w_]+@[\w_]+\.[\w_.]+$', r'^\d{1,5}$']  # Example patterns
     
     # Check against the whitelisted patterns
     if any(re.match(pattern, input_string) for pattern in acceptable_patterns):
         logging.info("Input is valid.")
         return False  # No vulnerabilities detected
     else:
-        logging.warning("Potential SQL injection detected!")
+        logging.warning(f"Potential SQL injection detected for input: '{input_string}'!")
         return True  # Potential vulnerability
 
 # Example usage of vulnerability detection

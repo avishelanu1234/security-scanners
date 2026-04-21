@@ -19,11 +19,13 @@ whitelist:
   - "example_secret"
   - "new_false_positive_1"
   - "new_false_positive_2"
+  - "additional_false_positive_1"
+  - "additional_false_positive_2"
 
 # Sensitivity Levels
 # Adjust these settings to minimize irrelevant alerts.
 sensitivity:
-  level: low
+  level: medium
 
 # Scanning Rules
 # Define your scanning rules based on the latest best practices.
@@ -31,7 +33,7 @@ scanning_rules:
   enable_sensitive_detection: true
   enable_dependency_scanning: true
   enable_secrets_detection: true
-  max_false_positive_rate: 3%
+  max_false_positive_rate: 1%
 
 # Additional Recommendations
 # Regularly update rules based on feedback from developers.

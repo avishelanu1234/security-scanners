@@ -41,8 +41,8 @@ def get_user_data(username):
 
 def detect_vulnerabilities(user_input):
     vulnerabilities = []
-    # Example rule: Check for SQL injection patterns in the input
-    if re.search(r'(\bSELECT\b|\bINSERT\b|\bUPDATE\b|\bDELETE\b)', user_input, re.IGNORECASE):
+    # Refined rule: Check for SQL injection patterns in the input
+    if re.search(r'((?i)\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|TRUNCATE)\b)', user_input):
         vulnerabilities.append("Potential SQL Injection detected.")
     return vulnerabilities
 
@@ -52,31 +52,46 @@ def detect_cloud_vulnerabilities(user_input):
     vulnerabilities = detect_vulnerabilities(user_input)  # Existing SQL injection check
     # Add cloud-specific checks
 
-    # Check for exposed AWS credentials
-    if re.search(r'AWS[A-Z0-9]{20}', user_input):
+    # Check for exposed AWS credentials using refined pattern
+    if re.search(r'AKIA[0-9A-Z]{16}', user_input):
         vulnerabilities.append("Potential AWS credential exposed.")
     
-    # Check for exposed API keys
-    if re.search(r'(?i)[A-Za-z0-9]{32,}', user_input):  # Example pattern for API keys
+    # Check for exposed API keys (generic pattern)
+    if re.search(r'(?i)(?:[A-Za-z0-9]{32}|[A-Za-z0-9]{40}|[A-F0-9]{40})', user_input):
         vulnerabilities.append("Potential API key exposed.")
     
-    # Add checks for other cloud providers
-    # For example, Azure and Google Cloud credentials
-    # Check for Azure credentials
+    # Check for Azure credentials with refined regex
     if re.search(r'AZURE[A-Z0-9]{40}', user_input):
         vulnerabilities.append("Potential Azure credential exposed.")
     
-    # Check for Google Cloud credentials
+    # Check for Google Cloud credentials with refined regex
     if re.search(r'AIza[0-9A-Za-z-_]{35}', user_input):
         vulnerabilities.append("Potential Google Cloud API key exposed.")
     
     return vulnerabilities
 
+# Function for user feedback on false positives
+
+def get_user_feedback(vulnerabilities):
+    if not vulnerabilities:
+        return "No vulnerabilities detected."
+    print("Detected vulnerabilities:")
+    for i, vulnerability in enumerate(vulnerabilities, start=1):
+        print(f"{i}. {vulnerability}")
+    feedback = input("Are any of these false positives? (yes/no): ").strip().lower()
+    if feedback == 'yes':
+        false_positive_indices = input("Please enter the numbers of false positives (comma-separated): ").split(',')
+        return [vulnerabilities[int(index)-1] for index in false_positive_indices if index.isdigit()]
+    return []
+
 # Example usage
 if __name__ == '__main__':
     user_input = input("Enter username: ").strip()  # Dynamic input
     vulnerabilities = detect_cloud_vulnerabilities(user_input)  # Use new function
-    if vulnerabilities:
+    false_positives = get_user_feedback(vulnerabilities)  # Get user feedback
+    if false_positives:
+        logging.info(f"User reported false positives: {false_positives}")
+    elif vulnerabilities:
         for vulnerability in vulnerabilities:
             logging.warning(vulnerability)  # Log vulnerabilities
     else:

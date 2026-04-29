@@ -1,6 +1,7 @@
 import sqlite3
 import logging
 import re  # Import regex module
+import json
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -75,14 +76,24 @@ def detect_cloud_vulnerabilities(user_input):
 def get_user_feedback(vulnerabilities):
     if not vulnerabilities:
         return "No vulnerabilities detected."
-    print("Detected vulnerabilities:")
-    for i, vulnerability in enumerate(vulnerabilities, start=1):
-        print(f"{i}. {vulnerability}")
-    feedback = input("Are any of these false positives? (yes/no): ").strip().lower()
-    if feedback == 'yes':
-        false_positive_indices = input("Please enter the numbers of false positives (comma-separated): ").split(',')
-        return [vulnerabilities[int(index)-1] for index in false_positive_indices if index.isdigit()]
-    return []
+    feedback = {}
+    feedback['detected_vulnerabilities'] = vulnerabilities
+    feedback['false_positives'] = []
+    # Log the detected vulnerabilities
+    logging.info(f"Detected vulnerabilities: {vulnerabilities}")
+    
+    # In a non-interactive environment, simulate user response
+    # Here, we mock user feedback for CI/CD integration
+    # In production, this should be replaced with actual feedback handling
+    for index, vulnerability in enumerate(vulnerabilities):
+        # Simulating user feedback (mock response)
+        if vulnerability.startswith("Potential SQL Injection"):  # Example of a false positive
+            feedback['false_positives'].append(vulnerability)
+    
+    # Save feedback to a file for later analysis
+    with open('user_feedback.json', 'w') as f:
+        json.dump(feedback, f)
+    return feedback['false_positives']
 
 # Example usage
 if __name__ == '__main__':

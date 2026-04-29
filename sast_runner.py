@@ -1,6 +1,7 @@
 import sqlite3
 import logging
 import re
+import asyncio
 from sqlite3 import pool
 
 # Configure logging
@@ -30,9 +31,8 @@ connection_pool = ConnectionPool('database.db')
 # Compiled regex for username validation, cached globally
 USERNAME_REGEX = re.compile(r'^[\w_]{1,50}$')
 
-# Function to get user data securely
-
-def get_user_data(username):
+# Asynchronous function to get user data securely
+async def get_user_data(username):
     # Validate user input
     if not isinstance(username, str) or not USERNAME_REGEX.match(username):
         raise ValueError("Invalid username input.")  # Validate user input
@@ -82,11 +82,14 @@ def detect_vulnerabilities(input_string):
         logging.warning(f"Potential SQL injection detected for input: '{input_string}'!")
         return True  # Potential vulnerability
 
-# Example usage of vulnerability detection
-if __name__ == '__main__':
+# Example usage of vulnerability detection with asyncio
+async def main():
     user_input = input("Enter username: ").strip()  # Dynamic input
     if detect_vulnerabilities(user_input):
         print("Potential SQL injection detected!")
     else:
-        result = get_user_data(user_input)
+        result = await get_user_data(user_input)
         print(result)
+
+if __name__ == '__main__':
+    asyncio.run(main())

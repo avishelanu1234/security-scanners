@@ -1,10 +1,22 @@
 [
-    "^[\w_.+-]+@(gmail|yahoo|outlook|hotmail|example)\.[a-zA-Z]{2,}$",  
-    "^(API_KEY|SECRET|TOKEN|PASSWORD|PASS)[\d\w]{5,}$",  
-    "^(\d{6,12})$",  
-    "^[\w_]+@(example|test|dev)\.[a-zA-Z]{2,3}$",  
-    "^(\d{6,12})$",  
-    "^(API_KEY|SECRET|TOKEN)\s+([\w_]{5,})$",  
-    "^(API_KEY|SECRET|TOKEN|PASSWORD|PASS)\s+.*$",  
-    "^(\w+[-\w]*\w+)[\.\,\'\"\-]+(\w+[-\w]*\w+)$"
+    // Email patterns for common providers
+    "^[a-zA-Z0-9._%+-]+@(gmail|yahoo|outlook|hotmail|example)\.[a-zA-Z]{2,}$",  
+    
+    // API keys, tokens, and passwords, ensuring they match specific patterns
+    "^(API_KEY|SECRET|TOKEN|PASSWORD|PASS)[:=]\s*[a-zA-Z0-9]{16,}$",  
+    
+    // Numeric strings with specific length constraints
+    "^\d{6,12}$",  
+    
+    // Emails from specific test/dev domains
+    "^[a-zA-Z0-9._%+-]+@(example|test|dev)\.[a-zA-Z]{2,3}$",  
+    
+    // Ensure API keys, tokens, or passwords are not overly simple
+    "^(API_KEY|SECRET|TOKEN)\s*[:=]\s*[a-zA-Z0-9]{16,}$",  
+    
+    // General pattern for identifying potential secrets in assignment
+    "^(API_KEY|SECRET|TOKEN|PASSWORD|PASS)\s*[=:]\s*[^\s]+$",  
+    
+    // General case for identifying potential sensitive data in strings
+    "^([a-zA-Z0-9_]+[-_\w]*[a-zA-Z0-9_]+)[\.,'\"\-]+([a-zA-Z0-9_]+[-_\w]*[a-zA-Z0-9_]+)$"
 ]

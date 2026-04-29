@@ -14,11 +14,11 @@
     // Ensure API keys, tokens, or passwords are not overly simple
     "\b(API_KEY|SECRET|TOKEN)\s*[:=;\s]+\s*[a-zA-Z0-9._-]{16,64}",  
     
-    // General pattern for identifying potential secrets in assignment
-    "^(API_KEY|SECRET|TOKEN|PASSWORD|PASS)\s*[=:;\s]+\s*[^\"\s]+",  
+    // General pattern for identifying potential secrets in assignment with contextual checks
+    "(?<!#|//|/\*|\s)(API_KEY|SECRET|TOKEN|PASSWORD|PASS)\s*[=:;\s]+\s*[^\"\s]+",  
     
-    // General case for identifying potential sensitive data in strings
-    "([a-zA-Z0-9._-]+)[\.,'\"\-]+([a-zA-Z0-9._-]+)",  
+    // General case for identifying potential sensitive data in strings with refined context
+    "(?<![\w.])([a-zA-Z0-9._-]+)[\.,'\"\-]+([a-zA-Z0-9._-]+)(?![\w])",  
     
     // Pattern for identifying hashes (e.g., SHA-1, SHA-256)
     "\b[0-9a-f]{40}\b|\b[0-9a-f]{64}\b"

@@ -1,12 +1,31 @@
 import sqlite3
 import logging
 import re
+from sqlite3 import pool
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Maintain a single database connection
-connection = sqlite3.connect('database.db')
+# Connection pool setup
+class ConnectionPool:
+    def __init__(self, db_file, pool_size=5):
+        self.pool_size = pool_size
+        self.pool = [self.create_connection(db_file) for _ in range(pool_size)]
+
+    def create_connection(self, db_file):
+        return sqlite3.connect(db_file)
+
+    def get_connection(self):
+        if self.pool:
+            return self.pool.pop()
+        else:
+            raise Exception("No available connections in the pool.")
+
+    def return_connection(self, conn):
+        self.pool.append(conn)
+
+# Initialize the connection pool
+connection_pool = ConnectionPool('database.db')
 
 # Compiled regex for username validation, cached globally
 USERNAME_REGEX = re.compile(r'^[\w_]{1,50}$')
@@ -18,6 +37,7 @@ def get_user_data(username):
     if not isinstance(username, str) or not USERNAME_REGEX.match(username):
         raise ValueError("Invalid username input.")  # Validate user input
     
+    connection = connection_pool.get_connection()
     try:
         cursor = connection.cursor()
         # Use parameterized query to prevent SQL injection
@@ -35,6 +55,8 @@ def get_user_data(username):
     except sqlite3.Error as e:
         logging.error(f"Database error for user '{username}': {e}")
         raise  # Re-raise the exception for further handling
+    finally:
+        connection_pool.return_connection(connection)
 
 # SQL injection detection logic
 

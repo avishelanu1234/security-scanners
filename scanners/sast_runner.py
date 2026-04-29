@@ -7,7 +7,6 @@ import json
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Function to get user data securely
-
 def get_user_data(username):
     # Regex for valid username (alphanumeric, 1-50 characters)
     if not re.match('^[a-zA-Z0-9]{1,50}$', username):
@@ -36,10 +35,8 @@ def get_user_data(username):
         return None
     except sqlite3.Error as e:
         logging.error(f"Database error: {e}")  # Error handling
-        return None
     
 # Function to detect vulnerabilities in user input
-
 def detect_vulnerabilities(user_input):
     vulnerabilities = []
     # Refined rule: Check for SQL injection patterns in the input
@@ -48,31 +45,25 @@ def detect_vulnerabilities(user_input):
     return vulnerabilities
 
 # Function to detect cloud-specific vulnerabilities
-
 def detect_cloud_vulnerabilities(user_input):
     vulnerabilities = detect_vulnerabilities(user_input)  # Existing SQL injection check
-    # Add cloud-specific checks
-
-    # Check for exposed AWS credentials using refined pattern
-    if re.search(r'AKIA[0-9A-Z]{16}', user_input):
+    
+    # Add cloud-specific checks with updated regex patterns
+    if re.search(r'\b(AKIA|ASIA)[0-9A-Z]{16}\b', user_input):
         vulnerabilities.append("Potential AWS credential exposed.")
     
-    # Check for exposed API keys (generic pattern)
-    if re.search(r'(?i)(?:[A-Za-z0-9]{32}|[A-Za-z0-9]{40}|[A-F0-9]{40})', user_input):
+    if re.search(r'\b(?i)([A-Za-z0-9]{32}|[A-Za-z0-9]{40}|[A-F0-9]{40}|(?<=api_key=)[A-Za-z0-9]{32})\b', user_input):
         vulnerabilities.append("Potential API key exposed.")
     
-    # Check for Azure credentials with refined regex
-    if re.search(r'AZURE[A-Z0-9]{40}', user_input):
+    if re.search(r'\bAZURE[A0-9]{36}\b', user_input):
         vulnerabilities.append("Potential Azure credential exposed.")
     
-    # Check for Google Cloud credentials with refined regex
-    if re.search(r'AIza[0-9A-Za-z-_]{35}', user_input):
+    if re.search(r'\bAIza[0-9A-Za-z-_]{35}\b', user_input):
         vulnerabilities.append("Potential Google Cloud API key exposed.")
     
     return vulnerabilities
 
 # Function for user feedback on false positives
-
 def get_user_feedback(vulnerabilities):
     if not vulnerabilities:
         return "No vulnerabilities detected."

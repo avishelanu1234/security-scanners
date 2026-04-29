@@ -2,8 +2,11 @@ import sqlite3
 import logging
 import re
 
-# Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+# Configure logging with additional error information
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s', handlers=[
+    logging.FileHandler('app.log'),  # Log to a file
+    logging.StreamHandler()  # Log to console
+])
 
 # Maintain a single database connection
 connection = sqlite3.connect('database.db')
@@ -14,6 +17,7 @@ def get_user_data(username):
     # Enhanced input validation using regex
     username_pattern = re.compile(r'^[\w_]{1,50}$')  # Compiled regex for username validation
     if not isinstance(username, str) or not username_pattern.match(username):
+        logging.error("Invalid username input: %s", username)  # Log error before raising
         raise ValueError("Invalid username input.")  # Validate user input
     
     try:
@@ -43,7 +47,7 @@ def detect_vulnerabilities(input_string):
         r'^[\w_.+-]+@[\w-]+\.[a-zA-Z]{2,}$',  # Valid email format
         r'^[\w_]+$',  # Alphanumeric usernames
         r'^[\d]+$',  # Numeric input
-        r'^[\w_]+@\w+\.\w{2,3}$',  # Shortened email format
+        r'^[\w_]+@[\w]+\.[\w]{2,3}$',  # Shortened email format
         r'^[\d]{1,5}$',  # Numeric input within 1 to 5 digits
         r'^[\w_]+\s*\w*$'  # Two-word usernames
     ]  # Example patterns

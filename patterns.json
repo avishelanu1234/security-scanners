@@ -3,7 +3,7 @@
     "^[a-zA-Z0-9._%+-]+@(?!.*(example|test|dev)$)[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",  
     
     // API keys, tokens, and passwords, ensuring they match specific patterns
-    "^(API_KEY|SECRET|TOKEN|PASSWORD|PASS|CREDENTIALS|ACCESS_TOKEN)[ :;=]\s*[a-zA-Z0-9]{16,}$",  
+    "\b(API_KEY|SECRET|TOKEN|PASSWORD|PASS|CREDENTIALS|ACCESS_TOKEN)\b[:;=]\s*[a-zA-Z0-9._-]{16,}",  
     
     // Numeric strings with specific length constraints
     "(?<![a-zA-Z])\d{6,12}(?![a-zA-Z])",  
@@ -12,11 +12,14 @@
     "^[a-zA-Z0-9._%+-]+@(example|test|dev)\.[a-zA-Z]{2,}$",  
     
     // Ensure API keys, tokens, or passwords are not overly simple
-    "^(API_KEY|SECRET|TOKEN)\s*[:=;\s]+\s*[a-zA-Z0-9]{16,}$",  
+    "\b(API_KEY|SECRET|TOKEN)\s*[:=;\s]+\s*[a-zA-Z0-9]{16,}",  
     
     // General pattern for identifying potential secrets in assignment
-    "^(API_KEY|SECRET|TOKEN|PASSWORD|PASS)\s*[=:;\s]+\s*[^"]+$",  
+    "^(API_KEY|SECRET|TOKEN|PASSWORD|PASS)\s*[=:;\s]+\s*[^\"]+$",  
     
     // General case for identifying potential sensitive data in strings
-    "([a-zA-Z0-9_]+[-_\w]*[a-zA-Z0-9_]+)[\.,'\"\-]+([a-zA-Z0-9_]+[-_\w]*[a-zA-Z0-9_]+)"
+    "([a-zA-Z0-9_]+[-_\w]*[a-zA-Z0-9_]+)[\.,'\"\-]+([a-zA-Z0-9_]+[-_\w]*[a-zA-Z0-9_]+)",  
+    
+    // Pattern for identifying hashes (e.g., SHA-1, SHA-256)
+    "\b[0-9a-f]{40}\b|\b[0-9a-f]{64}\b"
 ]

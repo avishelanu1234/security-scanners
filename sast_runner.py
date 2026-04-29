@@ -5,8 +5,20 @@ import re
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Maintain a single database connection
-connection = sqlite3.connect('database.db')
+# Function to create a database connection context manager
+class Database:
+    def __init__(self, db_file):
+        self.connection = sqlite3.connect(db_file)
+        self.cursor = self.connection.cursor()
+
+    def __enter__(self):
+        return self.cursor
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        if exc_type:
+            logging.error(f"Database error: {exc_value}")
+        self.connection.commit()
+        self.connection.close()
 
 # Pre-compile regex patterns for performance
 username_pattern = re.compile(r'^[\w_]{1,50}$')
@@ -28,8 +40,7 @@ def get_user_data(username):
     if not isinstance(username, str) or not username_pattern.match(username):
         raise ValueError("Invalid username input.")
     
-    try:
-        cursor = connection.cursor()
+    with Database('database.db') as cursor:
         query = "SELECT id, username, email FROM users WHERE username = ?"
         cursor.execute(query, (username,))
         
@@ -41,9 +52,6 @@ def get_user_data(username):
                 "email": result[2]
             }
         return None
-    except sqlite3.Error as e:
-        logging.error(f"Database error for user '{username}': {e}")
-        raise
 
 # SQL injection detection logic
 

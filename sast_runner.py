@@ -31,6 +31,19 @@ connection_pool = ConnectionPool('database.db')
 # Compiled regex for username validation, cached globally
 USERNAME_REGEX = re.compile(r'^[\w_]{1,50}$')
 
+# Compiled regex patterns for vulnerability detection, cached globally
+ACCEPTABLE_PATTERNS = [
+    re.compile(r'^[\w_.+-]+@[\w-]+\.[a-zA-Z]{2,}$'),  # Valid email format
+    re.compile(r'^[\w_]+$'),  # Alphanumeric usernames
+    re.compile(r'^[\d]+$'),  # Numeric input
+    re.compile(r'^[\w_]+@[\w]+\.[\w]{2,3}$'),  # Shortened email format
+    re.compile(r'^[\d]{1,5}$'),  # Numeric input within 1 to 5 digits
+    re.compile(r'^[\w_]+\s*\w*$'),  # Two-word usernames
+    re.compile(r'^[\-a-zA-Z]+$'),  # Allow hyphenated words
+    re.compile(r'^[\w\s]+$'),  # Alphanumeric with spaces
+    re.compile(r'^[\w\s]+[\.\,\'\"\-]+[\w\s]+$')  # Allows punctuation between words
+]
+
 # Asynchronous function to get user data securely
 async def get_user_data(username):
     # Validate user input
@@ -61,21 +74,8 @@ async def get_user_data(username):
 # SQL injection detection logic
 
 def detect_vulnerabilities(input_string):
-    # Expanded whitelist of acceptable patterns to include specific variations and improve accuracy
-    acceptable_patterns = [
-        r'^[\w_.+-]+@[\w-]+\.[a-zA-Z]{2,}$',  # Valid email format
-        r'^[\w_]+$',  # Alphanumeric usernames
-        r'^[\d]+$',  # Numeric input
-        r'^[\w_]+@[\w]+\.[\w]{2,3}$',  # Shortened email format
-        r'^[\d]{1,5}$',  # Numeric input within 1 to 5 digits
-        r'^[\w_]+\s*\w*$',  # Two-word usernames
-        r'^[\-a-zA-Z]+$',  # Allow hyphenated words
-        r'^[\w\s]+$',  # Alphanumeric with spaces
-        r'^[\w\s]+[\.\,\'\"\-]+[\w\s]+$'  # Allows punctuation between words
-    ]
-    
     # Check against the whitelisted patterns
-    if any(re.match(pattern, input_string) for pattern in acceptable_patterns):
+    if any(pattern.match(input_string) for pattern in ACCEPTABLE_PATTERNS):
         logging.info("Input is valid.")
         return False  # No vulnerabilities detected
     else:

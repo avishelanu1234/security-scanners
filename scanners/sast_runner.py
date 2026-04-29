@@ -40,7 +40,7 @@ def get_user_data(username):
 def detect_vulnerabilities(user_input):
     vulnerabilities = []
     # Refined rule: Check for SQL injection patterns in the input
-    if re.search(r'((?i)\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|TRUNCATE)\b)', user_input):
+    if re.search(r'(?i)(?:\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|TRUNCATE)\b|--|;|UNION|OR|AND)', user_input):
         vulnerabilities.append("Potential SQL Injection detected.")
     return vulnerabilities
 

@@ -8,17 +8,18 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 # Maintain a single database connection
 connection = sqlite3.connect('database.db')
 
+# Compiled regex for username validation, cached globally
+USERNAME_REGEX = re.compile(r'^[\w_]{1,50}$')
+
 # Function to get user data securely
 
 def get_user_data(username):
-    # Enhanced input validation using regex
-    username_pattern = re.compile(r'^[\w_]{1,50}$')  # Compiled regex for username validation
-    if not isinstance(username, str) or not username_pattern.match(username):
+    # Validate user input
+    if not isinstance(username, str) or not USERNAME_REGEX.match(username):
         raise ValueError("Invalid username input.")  # Validate user input
     
     try:
         cursor = connection.cursor()
-        
         # Use parameterized query to prevent SQL injection
         query = "SELECT id, username, email FROM users WHERE username = ?"
         cursor.execute(query, (username,))

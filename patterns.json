@@ -1,24 +1,24 @@
 [
     // Email patterns for common providers
-    "^[a-zA-Z0-9._%+-]+@(?!.*(example|test|dev|tempmail|mailinator|10minutemail)$)[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",  
+    "^[a-zA-Z0-9._%+-]+@(?!.*(example|test|dev|tempmail|mailinator|10minutemail|dev\.example\.com|test\.example\.com)$)[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",
     
     // API keys, tokens, and passwords, ensuring they match specific patterns
-    "\b(API_KEY|SECRET|TOKEN|ACCESS_TOKEN)\b[:;=]\s*[a-zA-Z0-9._-]{32,64}",  
+    "\b(API_KEY|SECRET|TOKEN|ACCESS_TOKEN|sk_|pk_)\b[:;=]\s*[a-zA-Z0-9._-]{32,64}",  
     
     // Numeric strings with specific length constraints
-    "(?<![a-zA-Z])\d{6,12}(?![a-zA-Z])",  
+    "(?<![a-zA-Z])\d{8,12}(?![a-zA-Z])",  
     
     // Emails from specific test/dev domains
     "^[a-zA-Z0-9._%+-]+@(test|dev|staging)\.(example|test)\.[a-zA-Z]{2,}$",  
     
     // Ensure API keys, tokens, or passwords are not overly simple
-    "\b(API_KEY|SECRET|TOKEN)\s*[:=;\s]+\s*(?=.*[!@#$%^&*()_+]).{16,64}",  
+    "\b(API_KEY|SECRET|TOKEN)\s*[:=;\s]+\s*(?=.*[!@#$%^&*()_+]).{20,64}",  
     
     // General pattern for identifying potential secrets in assignment
     "(?<!#|//|/\*|\s)(API_KEY|SECRET|TOKEN|PASSWORD|PASS)\s*[=:;\s]+\s*[^\"\s]+",  
     
     // General case for identifying potential sensitive data in strings
-    "(?<![\w.])([a-zA-Z0-9._-]+)[\.,'\"\-]+([a-zA-Z0-9._-]+)(?![\w])",  
+    "(?<![\w.])([a-zA-Z0-9._-]+)[\.,'"\-]+([a-zA-Z0-9._-]+)(?![\w])",  
     
     // Pattern for identifying hashes (e.g., SHA-1, SHA-256)
     "\b[0-9a-f]{40}\b|\b[0-9a-f]{64}\b"

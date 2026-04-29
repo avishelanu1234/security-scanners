@@ -1,0 +1,39 @@
+# Database Configuration
+# Ensure your database connection settings are correctly configured.
+database:
+  host: your_db_host
+  user: your_db_user
+  password: your_db_password
+
+# Secrets Configuration
+# Store sensitive information securely.
+secrets:
+  api_token: your_api_token
+
+# Whitelist Configuration
+# Add known false positives to the whitelist.
+whitelist:
+  - "hardcoded_api_key"
+  - "known_secret"
+  - "test_api_key"
+  - "example_secret"
+  - "new_false_positive_1"
+  - "new_false_positive_2"
+  - "additional_false_positive_1"
+  - "additional_false_positive_2"
+
+# Sensitivity Levels
+# Adjust these settings to minimize irrelevant alerts.
+sensitivity:
+  level: medium
+
+# Scanning Rules
+# Define your scanning rules based on the latest best practices.
+scanning_rules:
+  enable_sensitive_detection: true
+  enable_dependency_scanning: true
+  enable_secrets_detection: true
+  max_false_positive_rate: 1%
+
+# Additional Recommendations
+# Regularly update rules based on feedback from developers.

@@ -6,7 +6,7 @@ from typing import List, Optional
 from database import get_user_data
 
 # Configure logging with verbosity setting
-VERBOSE = True
+VERBOSE = False  # Set default verbosity to False to reduce logging overhead
 log_level = logging.INFO if VERBOSE else logging.WARNING
 logging.basicConfig(level=log_level, format='%(asctime)s - %(levelname)s - %(message)s')
 

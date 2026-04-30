@@ -24,3 +24,6 @@
 
 ## Conclusion
 By implementing these strategies to manage false positives and refining the scanning rules, you can improve the accuracy of your security scanners and reduce unnecessary alerts, allowing your team to focus on genuine vulnerabilities.
+
+
+<!-- Minor update to trigger CI pipeline -->

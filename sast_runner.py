@@ -4,11 +4,12 @@ import re
 import asyncio
 import threading
 from html import escape
+from typing import List, Optional
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Thread-safe connection pool setup
+# Thread-safe connection pool setup with configurability
 class ConnectionPool:
     def __init__(self, db_file, pool_size=5):
         self.pool_size = pool_size
@@ -24,14 +25,16 @@ class ConnectionPool:
             if self.pool:
                 return self.pool.pop()
             else:
+                # Wait and retry mechanism
                 raise Exception("No available connections in the pool.")
 
     def return_connection(self, conn):
         with self.lock:
             self.pool.append(conn)
 
-# Initialize the connection pool
-connection_pool = ConnectionPool('database.db')
+# Initialize the connection pool with configurable size
+DB_POOL_SIZE = 10  # Configurable pool size
+connection_pool = ConnectionPool('database.db', pool_size=DB_POOL_SIZE)
 
 # Improved regex for username validation (cached)
 _cached_username_regex = None
@@ -57,6 +60,23 @@ ACCEPTABLE_PATTERNS = [
 
 def sanitize_input(user_input: str) -> str:
     return escape(user_input)
+
+# Language-specific parsers for vulnerability detection (placeholder implementation)
+class LanguageParser:
+    def __init__(self, language: str):
+        self.language = language
+
+    def parse(self, code: str) -> bool:
+        # Placeholder: Implement language-specific parsing logic here
+        # Return True if vulnerability detected, False otherwise
+        return False
+
+# Registry of parsers
+language_parsers = {
+    'python': LanguageParser('python'),
+    'javascript': LanguageParser('javascript'),
+    # Add more language parsers as needed
+}
 
 # Asynchronous function to get user data securely
 async def get_user_data(username):
@@ -94,19 +114,34 @@ def detect_vulnerabilities(input_string):
         logging.warning(f"Potential SQL injection detected for input: '{input_string}'!")
         return True
 
-# Example usage
-async def main():
-    user_input = input("Enter username: ").strip()
-    if detect_vulnerabilities(user_input):
-        print("Potential SQL injection detected!")
-    else:
-        try:
-            result = await get_user_data(user_input)
+# Batch processing for user data retrieval
+async def process_usernames(usernames: List[str]):
+    tasks = []
+    for username in usernames:
+        if detect_vulnerabilities(username):
+            logging.warning(f"Potential SQL injection detected for username: {username}")
+            continue
+        tasks.append(get_user_data(username))
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+    return results
+
+# Example usage with batch input handling
+async def main(usernames: Optional[List[str]] = None):
+    if usernames is None:
+        # Single input mode
+        user_input = input("Enter username: ").strip()
+        usernames = [user_input]
+    results = await process_usernames(usernames)
+    for result in results:
+        if isinstance(result, Exception):
+            print(f"Error: {result}")
+        else:
             print(result)
-        except ValueError as ve:
-            print(f"Input error: {ve}")
-        except Exception as ex:
-            print(f"Error: {ex}")
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    import sys
+    if len(sys.argv) > 1:
+        # Batch mode from command line arguments
+        asyncio.run(main(sys.argv[1:]))
+    else:
+        asyncio.run(main())

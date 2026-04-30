@@ -1,25 +1,25 @@
 [
-    // Email patterns for common providers
-    "^[a-zA-Z0-9._%+-]+@(?!.*(example|test|dev|tempmail|mailinator|10minutemail|dev\.example\.com|test\.example\.com)$)[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",
-    
-    // API keys, tokens, and passwords, ensuring they match specific patterns
-    "\b(API_KEY|SECRET|TOKEN|ACCESS_TOKEN|sk_|pk_)\b[:;=]\s*[a-zA-Z0-9._-]{32,64}",  
-    
-    // Numeric strings with specific length constraints
-    "(?<![a-zA-Z])\d{8,12}(?![a-zA-Z])",  
-    
-    // Emails from specific test/dev domains
-    "^[a-zA-Z0-9._%+-]+@(test|dev|staging)\.(example|test)\.[a-zA-Z]{2,}$",  
-    
-    // Ensure API keys, tokens, or passwords are not overly simple
-    "\b(API_KEY|SECRET|TOKEN)\s*[:=;\s]+\s*(?=.*[!@#$%^&*()_+]).{20,64}",  
-    
-    // General pattern for identifying potential secrets in assignment
-    "(?<!#|//|/\*|\s)(API_KEY|SECRET|TOKEN|PASSWORD|PASS)\s*[=:;\s]+\s*[^\"\s]+",  
-    
-    // General case for identifying potential sensitive data in strings
-    "(?<![\w.])([a-zA-Z0-9._-]+)[\.,'"\-]+([a-zA-Z0-9._-]+)(?![\w])",  
-    
-    // Pattern for identifying hashes (e.g., SHA-1, SHA-256)
-    "\b[0-9a-f]{40}\b|\b[0-9a-f]{64}\b"
+    // Enhanced email patterns excluding expanded disposable and test domains
+    "^[a-zA-Z0-9._%+-]+@(?!.*(example|test|dev|tempmail|mailinator|10minutemail|dev\\.example\\.com|test\\.example\\.com|guerrillamail|maildrop|dispostable|mailcatch|fakeinbox|trashmail|tempmailo|yopmail|sharklasers|spam4|spambog|mailnesia|10minutemail|mailinator))\\.[a-zA-Z]{2,}$",
+
+    // Expanded API key prefixes and adjusted pattern for complexity
+    "\\b(API_KEY|SECRET|TOKEN|ACCESS_TOKEN|sk_|pk_|aws_access_key_id|aws_secret_access_key|google_api_key|azure_key|slack_token|github_token)\\b[:;=]\\s*[a-zA-Z0-9._-]{32,64}",
+
+    // Refined numeric strings detection to reduce false positives by context
+    "(?<![a-zA-Z0-9])\\d{8,12}(?![a-zA-Z0-9])",
+
+    // Emails from specific test/dev domains (unchanged)
+    "^[a-zA-Z0-9._%+-]+@(test|dev|staging)\\.(example|test)\\.[a-zA-Z]{2,}$",
+
+    // Ensure API keys, tokens, or passwords are not overly simple with special char requirement
+    "\\b(API_KEY|SECRET|TOKEN)\\s*[:=;\\s]+\\s*(?=.*[!@#$%^&*()_+]).{20,64}",
+
+    // General pattern for identifying potential secrets in assignment, excluding common comments
+    "(?<!#|//|/\\*|\\s)(API_KEY|SECRET|TOKEN|PASSWORD|PASS|AWS_SECRET_ACCESS_KEY|AWS_ACCESS_KEY_ID)\\s*[=:;\\s]+\\s*[^\\"\\s]+",
+
+    // Enhanced general case for identifying potential sensitive data in strings, improved with negative lookaheads/lookbehinds to reduce false positives
+    "(?<![\\w.])([a-zA-Z0-9._-]+)[\\.,'\"\\-]+([a-zA-Z0-9._-]+)(?![\\w])",
+
+    // Extended pattern for identifying hashes (SHA-1, SHA-256, MD5, SHA-512)
+    "\\b[0-9a-f]{40}\\b|\\b[0-9a-f]{64}\\b|\\b[0-9a-f]{32}\\b|\\b[0-9a-f]{128}\\b"
 ]

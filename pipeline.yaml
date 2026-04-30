@@ -1,0 +1,66 @@
+name: Security Scan Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  sast_scan:
+    name: Static Application Security Testing (SAST)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install Bandit
+        run: |
+          python -m pip install --upgrade pip
+          pip install bandit
+
+      - name: Run Bandit SAST scan
+        run: bandit -r . -f json -o bandit-report.json
+
+      - name: Upload Bandit scan report
+        uses: actions/upload-artifact@v3
+        with:
+          name: bandit-report
+          path: bandit-report.json
+
+  dast_scan:
+    name: Dynamic Application Security Testing (DAST)
+    runs-on: ubuntu-latest
+    needs: sast_scan
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Start application (example)
+        run: |
+          # Example: Start your application here
+          # For demo, we'll just sleep
+          sleep 10 &
+
+      - name: Install OWASP ZAP
+        run: |
+          sudo apt-get update && sudo apt-get install -y zaproxy
+
+      - name: Run OWASP ZAP baseline scan
+        run: |
+          zap-baseline.py -t http://localhost:8080 -r zap-report.html
+
+      - name: Upload ZAP scan report
+        uses: actions/upload-artifact@v3
+        with:
+          name: zap-report
+          path: zap-report.html

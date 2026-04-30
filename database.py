@@ -4,7 +4,7 @@ import re
 import asyncio
 from sqlite3 import pool
 
-# Configure logging
+# Configure logging with structured format
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Connection pool setup
@@ -68,8 +68,8 @@ async def get_user_data(username):
             }
         return None  # No user found
     except sqlite3.Error as e:
-        logging.error(f"Database error for user '{username}': {e}")
-        raise  # Re-raise the exception for further handling
+        logging.error(f"Database error occurred: {e}")
+        raise ValueError("An error occurred while retrieving user data. Please try again later.")
     finally:
         connection_pool.return_connection(connection)
 

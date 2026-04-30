@@ -42,11 +42,25 @@ def detect_vulnerabilities(user_input):
     # Refined rule: Check for SQL injection patterns in the input
     if re.search(r'(?i)(?:\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|TRUNCATE)\b|--|;|UNION|OR|AND)', user_input):
         vulnerabilities.append("Potential SQL Injection detected.")
+    
+    # Additional OWASP pattern detections
+    # Detect Cross-Site Scripting (XSS) patterns
+    if re.search(r'<script|<img|onerror=|onload=|javascript:', user_input, re.IGNORECASE):
+        vulnerabilities.append("Potential Cross-Site Scripting (XSS) detected.")
+    
+    # Detect Command Injection patterns
+    if re.search(r'\b(cat|ls|curl|wget|bash|sh|nc|netcat|python|perl|php|ruby|java|powershell|cmd)\b', user_input, re.IGNORECASE):
+        vulnerabilities.append("Potential Command Injection detected.")
+    
+    # Detect Path Traversal patterns
+    if re.search(r'(\.\./|/etc/passwd|/bin/bash)', user_input):
+        vulnerabilities.append("Potential Path Traversal detected.")
+    
     return vulnerabilities
 
 # Function to detect cloud-specific vulnerabilities
 def detect_cloud_vulnerabilities(user_input):
-    vulnerabilities = detect_vulnerabilities(user_input)  # Existing SQL injection check
+    vulnerabilities = detect_vulnerabilities(user_input)  # Existing SQL injection and new OWASP checks
     
     # Add cloud-specific checks with updated regex patterns
     if re.search(r'\b(AKIA|ASIA)[0-9A-Z]{16}\b', user_input):

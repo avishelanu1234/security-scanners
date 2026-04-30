@@ -27,7 +27,7 @@ This document provides a comprehensive overview of the recent vulnerabilities id
 
 ## Detailed Recommendations and Mitigation Plans
 
-### 1. Connection Pooling Vulnerabilities
+### 1. Connection Pooling Vulnerabilities (file affected: database.py)
 - Implement connection leak monitoring with real-time alerts.
 - Enable dynamic pool resizing to adapt to workload demands.
 - Introduce a queuing mechanism for managing connection requests.
@@ -40,7 +40,7 @@ This document provides a comprehensive overview of the recent vulnerabilities id
 - Adopt Object-Relational Mappers (ORMs) or secure frameworks using parameterized queries.
 - Implement logging and alerting on suspicious input patterns.
 
-### 3. Concurrency and Race Condition Risks
+### 3. Concurrency and Race Condition Risks (file affected: sast_runner.py)
 - Strengthen concurrency controls using appropriate synchronization primitives.
 - Develop comprehensive concurrency testing suites to identify and fix race conditions.
 

@@ -46,6 +46,8 @@ def main():
     comment_lines = ["### OWASP ZAP DAST Scan - High Risk Alerts Detected:\n"]
     for alertname, description, url in alerts:
         comment_lines.append(f"- **{alertname}** at {url}\n  Description: {description}")
+        comment_lines.append("\n**Next Action:** Review the alert details and remediate the issue as soon as possible to maintain application security.")
+        comment_lines.append("\nCopy the URL above to inspect the affected endpoint and consult the OWASP ZAP report for remediation guidance.")
 
     comment = "\n".join(comment_lines)
 

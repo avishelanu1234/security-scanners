@@ -1,7 +1,6 @@
 import logging
 import re
 import asyncio
-from html import escape
 from typing import List, Optional
 from database import get_user_data
 

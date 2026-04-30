@@ -13,9 +13,20 @@ class SecretScanner:
         # Increased minimum secret length to 30 characters to further reduce false positives
         # Added patterns for detecting AWS and Azure keys specifically
         self.hardcode_pattern = re.compile(
-            r"(?i)\b(?!tokenize|passwordless|notoken|nopassword|password123|passphrase|apikeytest|secret123|dummy|example|changeme|default|sample|testkey|placeholder)"
-            r"(api[-_] ?key|apikey|token|secret|password|passwd|auth|access[-_] ?key|secret[-_] ?key|private[-_] ?key|client[-_] ?secret|client[-_] ?key|aws_access_key_id|aws_secret_access_key|azure_key)\b\s*[:=]\s*['"]"
-            r"[a-zA-Z0-9_\-\.\+=\/]{30,}['"]"
+            r"""(?ix)                          # Ignore case, verbose mode
+            \b                                # Word boundary
+            (?!                              # Negative lookahead for excluded keywords
+                tokenize|passwordless|notoken|nopassword|password123|passphrase|apikeytest|secret123|dummy|example|changeme|default|sample|testkey|placeholder
+            )
+            (api[-_ ]?key|apikey|token|secret|password|passwd|auth|access[-_ ]?key|
+             secret[-_ ]?key|private[-_ ]?key|client[-_ ]?secret|client[-_ ]?key|aws_access_key_id|aws_secret_access_key|azure_key)
+            \b                               # Word boundary
+            \s*[:=]\s*                       # Assignment operator with optional whitespace
+            (['"])                          # Opening quote (captured)
+            ([a-zA-Z0-9_\-\.\+=\/]{30,})    # Secret value with min length 30
+            \1                              # Matching closing quote
+            """,
+            re.VERBOSE | re.IGNORECASE
         )
 
     def _calculate_entropy(self, data: str) -> float:

@@ -64,6 +64,14 @@ jobs:
           if bandit -r . -f json | jq '.results[] | select(.issue_severity == "HIGH")' | grep .; then exit 1; fi
         shell: bash
 
+      - name: Post Bandit SAST scan results as PR comment
+        run: |
+          python scripts/pr_comment_bandit.py
+
+      - name: Post Secrets scan results as PR comment
+        run: |
+          python scripts/pr_comment_secrets.py
+
   dast_scan:
     name: Dynamic Application Security Testing (DAST)
     runs-on: ubuntu-latest
@@ -119,6 +127,10 @@ jobs:
         run: |
           if grep -q "High" zap-report.html; then exit 1; fi
         shell: bash
+
+      - name: Post ZAP DAST scan results as PR comment
+        run: |
+          python scripts/pr_comment_zap.py
 
   notify:
     name: Notify on Scan Failures

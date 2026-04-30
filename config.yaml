@@ -1,17 +1,18 @@
 # Database Configuration
-# Ensure your database connection settings are correctly configured.
+# Use environment variables or secret management to populate these values securely.
 database:
-  host: your_db_host
-  user: your_db_user
-  password: your_db_password
+  host: ${DB_HOST}        # Database host address
+  user: ${DB_USER}        # Database user name
+  password: ${DB_PASSWORD} # Database password (keep secret!)
 
 # Secrets Configuration
-# Store sensitive information securely.
+# Store sensitive tokens securely using environment variables or secret management.
 secrets:
-  api_token: your_api_token
+  api_token: ${API_TOKEN}  # API token for external integrations
 
 # Whitelist Configuration
-# Add known false positives to the whitelist.
+# List known false positives to exclude from alerts.
+# Consider managing this list externally if it grows large to simplify updates.
 whitelist:
   - "hardcoded_api_key"
   - "known_secret"
@@ -23,17 +24,46 @@ whitelist:
   - "additional_false_positive_2"
 
 # Sensitivity Levels
-# Adjust these settings to minimize irrelevant alerts.
+# Controls the aggressiveness of detection to reduce noise.
+# Options: low, medium, high
+# - low: fewer alerts, may miss some issues
+# - medium: balanced detection and noise
+# - high: more alerts, higher chance of false positives
 sensitivity:
   level: medium
 
 # Scanning Rules
-# Define your scanning rules based on the latest best practices.
+# Enable or disable different scanning capabilities.
+# Adjust max_false_positive_rate to balance detection sensitivity and noise.
 scanning_rules:
   enable_sensitive_detection: true
   enable_dependency_scanning: true
   enable_secrets_detection: true
   max_false_positive_rate: 1%
 
+# Scan Scheduling
+# Define scan frequency and timing to automate security assessments.
+scan_schedule:
+  frequency: daily        # Options: hourly, daily, weekly, monthly
+  time: "02:00"          # Time of day to run scans (24h format, UTC)
+
+# Notifications
+# Configure alerts and notification channels for scan results.
+notifications:
+  email_alerts: true
+  email_recipients:
+    - security-team@example.com
+    - dev-team@example.com
+  slack_alerts: true
+  slack_channel: "#security-alerts"
+
+# Issue Tracking Integration
+# Automatically create or update issues in your tracking system based on scan findings.
+issue_tracking:
+  enabled: true
+  system: jira            # Supported: jira, github, gitlab, etc.
+  project_key: SEC       # Project or repo identifier
+  assignee: security_lead
+
 # Additional Recommendations
-# Regularly update rules based on feedback from developers.
+# Regularly review and update scanning rules and configurations based on feedback and emerging threats.

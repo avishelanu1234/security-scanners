@@ -5,16 +5,18 @@ import asyncio
 import threading
 from html import escape
 
-# Configure logging with structured format
+# Configure logging with structured format and added connection pool monitoring
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Thread-safe connection pool setup with lifecycle management
+# Thread-safe connection pool setup with lifecycle management and monitoring
 class ConnectionPool:
-    def __init__(self, db_file, pool_size=5):
+    def __init__(self, db_file, pool_size=5, max_pool_size=10):
         self.pool_size = pool_size
+        self.max_pool_size = max_pool_size
         self.db_file = db_file
         self.lock = threading.Lock()
         self.pool = [self.create_connection() for _ in range(pool_size)]
+        self.in_use = 0
 
     def create_connection(self):
         conn = sqlite3.connect(self.db_file)
@@ -23,7 +25,13 @@ class ConnectionPool:
     def get_connection(self):
         with self.lock:
             if self.pool:
+                self.in_use += 1
+                logging.info(f"Connection acquired. In use: {self.in_use}")
                 return self.pool.pop()
+            elif self.in_use < self.max_pool_size:
+                logging.info("Creating a new connection as pool is empty but max not reached.")
+                self.in_use += 1
+                return self.create_connection()
             else:
                 raise Exception("No available connections in the pool.")
 
@@ -33,13 +41,17 @@ class ConnectionPool:
                 # Validate connection by executing a lightweight query
                 conn.execute('SELECT 1')
                 self.pool.append(conn)
+                self.in_use -= 1
+                logging.info(f"Connection returned. In use: {self.in_use}")
             except sqlite3.Error:
                 # If connection is invalid, recreate and add
                 new_conn = self.create_connection()
                 self.pool.append(new_conn)
+                self.in_use -= 1
+                logging.warning("Invalid connection replaced with a new one.")
 
-# Initialize the connection pool
-connection_pool = ConnectionPool('database.db')
+# Initialize the connection pool with a max size
+connection_pool = ConnectionPool('database.db', pool_size=5, max_pool_size=10)
 
 # Improved regex for username validation (alphanumeric, underscore, hyphen, length 1-50)
 USERNAME_REGEX = re.compile(r'^[\w\-]{1,50}$')

@@ -37,3 +37,29 @@ class ConnectionPool:
 
 # Initialize the connection pool
 connection_pool = ConnectionPool('database.db')
+
+# Async function to get user data securely
+async def get_user_data(username, sanitize_input, get_username_regex, logging):
+    sanitized_username = sanitize_input(username)
+    regex = get_username_regex()
+    if not isinstance(sanitized_username, str) or not regex.match(sanitized_username):
+        raise ValueError("Invalid username input.")
+    
+    connection = connection_pool.get_connection()
+    try:
+        cursor = connection.cursor()
+        query = "SELECT id, username, email FROM users WHERE username = ?"
+        cursor.execute(query, (sanitized_username,))
+        result = cursor.fetchone()
+        if result:
+            return {
+                "id": result[0],
+                "username": result[1],
+                "email": result[2]
+            }
+        return None
+    except sqlite3.Error as e:
+        logging.error(f"Database error for user '{sanitized_username}': {e}")
+        raise
+    finally:
+        connection_pool.return_connection(connection)

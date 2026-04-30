@@ -36,19 +36,27 @@ jobs:
           name: bandit-report
           path: bandit-report.json
 
+      - name: Fail on high severity issues
+        run: |
+          if bandit -r . -f json | jq '.results[] | select(.issue_severity == "HIGH")' | grep .; then exit 1; fi
+        shell: bash
+
   dast_scan:
     name: Dynamic Application Security Testing (DAST)
     runs-on: ubuntu-latest
     needs: sast_scan
 
+    env:
+      TARGET_URL: http://localhost:8080
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Start application (example)
+      - name: Start application
         run: |
-          # Example: Start your application here
-          # For demo, we'll just sleep
+          # TODO: Replace with actual app startup command
+          echo "Starting application..."
           sleep 10 &
 
       - name: Install OWASP ZAP
@@ -57,10 +65,21 @@ jobs:
 
       - name: Run OWASP ZAP baseline scan
         run: |
-          zap-baseline.py -t http://localhost:8080 -r zap-report.html
+          zap-baseline.py -t ${{ env.TARGET_URL }} -r zap-report.html
 
       - name: Upload ZAP scan report
         uses: actions/upload-artifact@v3
         with:
           name: zap-report
           path: zap-report.html
+
+      - name: Fail on high risk alerts
+        run: |
+          if grep -q "High" zap-report.html; then exit 1; fi
+        shell: bash
+
+# Recommendations:
+# - Ensure secrets are not exposed in logs or artifacts.
+# - Add notifications for scan failures or critical vulnerabilities.
+# - Consider parallelizing scans if feasible.
+# - Add additional scanners as needed for comprehensive coverage.

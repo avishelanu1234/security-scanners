@@ -8,9 +8,10 @@ import re
 class SecretScanner:
     def __init__(self):
         # Refined regex pattern for hardcoded secrets with word boundaries and stricter conditions
+        # Increased minimum secret length to 20 characters to reduce false positives
         self.hardcode_pattern = re.compile(
-            r"(?i)\b(api[-_]?key|apikey|token|secret|password|passwd|auth|access[-_]?key|secret[-_]?key|private[-_]?key|client[-_]?secret|client[-_]?key)\b\s*[:=]\s*['\"]"
-            r"[a-zA-Z0-9_\-\.\+=\/]{12,}['\"]"
+            r"(?i)\b(api[-_] ?key|apikey|token|secret|password|passwd|auth|access[-_] ?key|secret[-_] ?key|private[-_] ?key|client[-_] ?secret|client[-_] ?key)\b\s*[:=]\s*['\"]"
+            r"[a-zA-Z0-9_\-\.\+=\/]{20,}['\"]"
         )
 
     def scan_code(self, code: str) -> list[str]:

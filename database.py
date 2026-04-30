@@ -5,13 +5,15 @@ import threading
 # Configure logging with structured format
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Thread-safe connection pool setup with lifecycle management
+# Thread-safe connection pool setup with lifecycle management and monitoring
 class ConnectionPool:
-    def __init__(self, db_file, pool_size=5):
+    def __init__(self, db_file, pool_size=5, unclosed_threshold=3):
         self.pool_size = pool_size
         self.db_file = db_file
         self.lock = threading.Lock()
         self.pool = [self.create_connection() for _ in range(pool_size)]
+        self.checked_out_connections = 0
+        self.unclosed_threshold = unclosed_threshold
 
     def create_connection(self):
         conn = sqlite3.connect(self.db_file)
@@ -20,6 +22,9 @@ class ConnectionPool:
     def get_connection(self):
         with self.lock:
             if self.pool:
+                self.checked_out_connections += 1
+                if self.checked_out_connections > self.unclosed_threshold:
+                    logging.warning(f"Alert: High number of unclosed connections: {self.checked_out_connections}")
                 return self.pool.pop()
             else:
                 raise Exception("No available connections in the pool.")
@@ -30,10 +35,12 @@ class ConnectionPool:
                 # Validate connection by executing a lightweight query
                 conn.execute('SELECT 1')
                 self.pool.append(conn)
+                self.checked_out_connections -= 1
             except sqlite3.Error:
                 # If connection is invalid, recreate and add
                 new_conn = self.create_connection()
                 self.pool.append(new_conn)
+                self.checked_out_connections -= 1
 
 # Initialize the connection pool
 connection_pool = ConnectionPool('database.db')

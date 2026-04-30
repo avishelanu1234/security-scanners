@@ -1,33 +1,39 @@
-[
-    // Enhanced email patterns excluding expanded disposable and test domains, including encoded email forms
-    "(?i)^[a-zA-Z0-9._%+-]+@(?!.*(?:example|test|dev|tempmail|mailinator|10minutemail|dev\\.example\\.com|test\\.example\\.com|guerrillamail|maildrop|dispostable|mailcatch|fakeinbox|trashmail|tempmailo|yopmail|sharklasers|spam4|spambog|mailnesia|10minutemail|mailinator))\\.[a-zA-Z]{2,}$",
-    // General email pattern with anchors and case insensitive
+{
+  "disposable_domains": [
+    "example",
+    "test",
+    "dev",
+    "tempmail",
+    "mailinator",
+    "10minutemail",
+    "dev.example.com",
+    "test.example.com",
+    "guerrillamail",
+    "maildrop",
+    "dispostable",
+    "mailcatch",
+    "fakeinbox",
+    "trashmail",
+    "tempmailo",
+    "yopmail",
+    "sharklasers",
+    "spam4",
+    "spambog",
+    "mailnesia",
+    "mailinator"
+  ],
+  "patterns": [
+    "(?i)^[a-zA-Z0-9._%+-]+@(?!.*(?:{{DISPOSABLE_DOMAINS}}))\\.[a-zA-Z]{2,}$",
     "(?i)^(?:[a-zA-Z0-9_\\-\\.=]+)@(?:[a-zA-Z0-9_\\-\\.=]+)\\.[a-zA-Z]{2,}$",
-
-    // Expanded API key prefixes and adjusted pattern for complexity including additional popular services, case insensitive
     "(?i)\\b(API_KEY|SECRET|TOKEN|ACCESS_TOKEN|sk_|pk_|aws_access_key_id|aws_secret_access_key|google_api_key|azure_key|slack_token|github_token|stripe_key|twilio_token|firebase_key)\\b[:;=\\s]*[a-zA-Z0-9._-]{32,64}",
-
-    // Pattern for environment variable style secrets without explicit assignment, case insensitive
     "(?i)\\b[A-Z0-9_]+_(KEY|SECRET|TOKEN|PASSWORD|PASS)\\b",
-
-    // Refined numeric strings detection to reduce false positives by context
     "(?<![a-zA-Z0-9])\\d{8,12}(?![a-zA-Z0-9])",
-
-    // Specific pattern for credit card numbers (Visa, MasterCard, Amex, Discover) with optional spaces or dashes
     "\\b(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14}|3[47][0-9]{13}|6(?:011|5[0-9]{2})[0-9]{12})\\b",
-
-    // Emails from specific test/dev domains, case insensitive
     "(?i)^[a-zA-Z0-9._%+-]+@(test|dev|staging)\\.(example|test)\\.[a-zA-Z]{2,}$",
-
-    // Ensure API keys, tokens, or passwords are not overly simple with special char requirement, case insensitive
     "(?i)\\b(API_KEY|SECRET|TOKEN)\\s*[:=;\\s]+\\s*(?=.*[!@#$%^&*()_+]).{20,64}",
-
-    // General pattern for identifying potential secrets in assignment, excluding common comments, case insensitive
     "(?i)(?<!#|//|/\\*|\\s)(API_KEY|SECRET|TOKEN|PASSWORD|PASS|AWS_SECRET_ACCESS_KEY|AWS_ACCESS_KEY_ID)\\s*[=:;\\s]+\\s*[^\\"\\s]+",
-
-    // Enhanced general case for identifying potential sensitive data in strings, improved with negative lookaheads/lookbehinds to reduce false positives, case insensitive
     "(?i)(?<![\\w.])([a-zA-Z0-9._-]+)[\\.,'\"\\-]+([a-zA-Z0-9._-]+)(?![\\w])",
-
-    // Extended pattern for identifying hashes (SHA-1, SHA-256, MD5, SHA-512) including base64 encoded hashes, hex patterns case insensitive
-    "(?i)\\b[0-9a-f]{40}\\b|\\b[0-9a-f]{64}\\b|\\b[0-9a-f]{32}\\b|\\b[0-9a-f]{128}\\b|[A-Za-z0-9+/=]{40,}"
-]
+    "(?i)\\b[0-9a-f]{40}\\b|\\b[0-9a-f]{64}\\b|\\b[0-9a-f]{32}\\b|\\b[0-9a-f]{128}\\b|[A-Za-z0-9+/=]{40,}",
+    "(?s)(?<!\\S)(API_KEY|SECRET|TOKEN|PASSWORD|PASS|AWS_SECRET_ACCESS_KEY|AWS_ACCESS_KEY_ID)\\s*[=:;\\s]+\\s*[^\"\\s]+(?!\S)"
+  ]
+}

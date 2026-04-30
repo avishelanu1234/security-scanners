@@ -5,8 +5,10 @@ from html import escape
 from typing import List, Optional
 from database import get_user_data
 
-# Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+# Configure logging with verbosity setting
+VERBOSE = True
+log_level = logging.INFO if VERBOSE else logging.WARNING
+logging.basicConfig(level=log_level, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Regex patterns for vulnerability detection
 ACCEPTABLE_PATTERNS = [
@@ -22,6 +24,11 @@ ACCEPTABLE_PATTERNS = [
 # SQL injection detection
 
 def detect_vulnerabilities(input_string):
+    # Perform a simple length check before regex matching
+    if len(input_string) == 0 or len(input_string) > 100:
+        logging.warning(f"Input length invalid for potential SQL injection: '{input_string}'")
+        return True
+    
     if any(pattern.match(input_string) for pattern in ACCEPTABLE_PATTERNS):
         logging.info("Input is valid.")
         return False

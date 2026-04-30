@@ -17,24 +17,39 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Cache pip
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
 
-      - name: Install Bandit
+      - name: Install Bandit and detect-secrets
         run: |
           python -m pip install --upgrade pip
-          pip install bandit
+          pip install bandit detect-secrets
 
       - name: Run Bandit SAST scan
         run: bandit -r . -f json -o bandit-report.json
 
-      - name: Upload Bandit scan report
+      - name: Run detect-secrets scan
+        run: |
+          detect-secrets scan > .secrets.baseline
+          detect-secrets audit .secrets.baseline
+
+      - name: Upload Bandit and Secrets scan reports
         uses: actions/upload-artifact@v3
         with:
-          name: bandit-report
-          path: bandit-report.json
+          name: security-scan-reports
+          path: |
+            bandit-report.json
+            .secrets.baseline
 
       - name: Fail on high severity issues
         run: |
@@ -55,17 +70,23 @@ jobs:
 
       - name: Start application
         run: |
-          # TODO: Replace with actual app startup command
-          echo "Starting application..."
+          # Replace with actual app startup command
+          echo "Starting application with secure config..."
           sleep 10 &
 
       - name: Install OWASP ZAP
         run: |
           sudo apt-get update && sudo apt-get install -y zaproxy
 
-      - name: Run OWASP ZAP baseline scan
+      - name: Run OWASP ZAP baseline scan with authentication and API key
+        env:
+          ZAP_API_KEY: ${{ secrets.ZAP_API_KEY }}
         run: |
-          zap-baseline.py -t ${{ env.TARGET_URL }} -r zap-report.html
+          zap-baseline.py -t ${{ env.TARGET_URL }} -r zap-report.html -z "-config api.key=${{ env.ZAP_API_KEY }}" -z "-auth username=admin password=admin"
+
+      - name: Parse ZAP scan report
+        run: |
+          grep -q "High" zap-report.html && echo "High risk issues found!" || echo "No high risk issues found."
 
       - name: Upload ZAP scan report
         uses: actions/upload-artifact@v3
@@ -77,6 +98,21 @@ jobs:
         run: |
           if grep -q "High" zap-report.html; then exit 1; fi
         shell: bash
+
+  notify:
+    name: Notify on Scan Failures
+    runs-on: ubuntu-latest
+    needs: [sast_scan, dast_scan]
+    if: failure()
+
+    steps:
+      - name: Send notification to Slack
+        uses: slackapi/slack-github-action@v1.23.0
+        with:
+          channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
+          slack-message: "Security scan pipeline failed. Please review the reports."
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
 
 # Recommendations:
 # - Ensure secrets are not exposed in logs or artifacts.

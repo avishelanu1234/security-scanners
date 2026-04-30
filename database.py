@@ -3,7 +3,7 @@ import logging
 import re
 import asyncio
 import threading
-from sqlite3 import pool
+from html import escape
 
 # Configure logging with structured format
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -55,21 +55,43 @@ ACCEPTABLE_PATTERNS = [
     re.compile(r'^[a-zA-Z\-]+$'),  # Allow hyphenated words
 ]
 
+# Custom exceptions
+class InputValidationError(Exception):
+    pass
+
+class DatabaseError(Exception):
+    pass
+
+# Centralized input sanitization and validation
+
+def sanitize_input(user_input: str) -> str:
+    # Escape HTML to prevent XSS if output rendered in UI
+    escaped_input = escape(user_input)
+    # Additional sanitization logic can be added here
+    return escaped_input
+
+
+def validate_username(username: str):
+    if not isinstance(username, str) or not (1 <= len(username) <= 50):
+        raise InputValidationError("Username must be a string between 1 and 50 characters.")
+    sanitized = sanitize_input(username)
+    if not USERNAME_REGEX.match(sanitized):
+        raise InputValidationError("Username contains invalid characters.")
+    return sanitized
+
 # Asynchronous function to get user data securely
-async def get_user_data(username):
-    # Validate user input with length and regex check
-    if not isinstance(username, str) or len(username) > 50 or len(username) == 0:
-        raise ValueError("Invalid username input.")
-    if not USERNAME_REGEX.match(username):
-        raise ValueError("Invalid username input.")
+async def get_user_data(username: str):
+    try:
+        valid_username = validate_username(username)
+    except InputValidationError as ive:
+        logging.warning(f"Input validation failed: {ive}")
+        raise
 
     connection = connection_pool.get_connection()
     try:
         cursor = connection.cursor()
-        # Use parameterized query to prevent SQL injection
         query = "SELECT id, username, email FROM users WHERE username = ?"
-        cursor.execute(query, (username,))
-        
+        cursor.execute(query, (valid_username,))
         result = cursor.fetchone()
         if result:
             return {
@@ -77,32 +99,43 @@ async def get_user_data(username):
                 "username": result[1],
                 "email": result[2]
             }
-        return None  # No user found
+        return None
     except sqlite3.Error as e:
-        logging.error(f"Database error occurred: {e}")
-        raise ValueError("An error occurred while retrieving user data. Please try again later.")
+        logging.error(f"Database error occurred: {e}", exc_info=True)
+        raise DatabaseError("An internal error occurred. Please try again later.") from e
     finally:
         connection_pool.return_connection(connection)
 
+# Utility to mask sensitive data in logs
+def mask_sensitive(data: str) -> str:
+    if len(data) <= 2:
+        return "*" * len(data)
+    return data[0] + "*" * (len(data) - 2) + data[-1]
+
 # SQL injection detection logic
 
-def detect_vulnerabilities(input_string):
-    # Check against the whitelisted patterns
+def detect_vulnerabilities(input_string: str):
+    masked_input = mask_sensitive(input_string)
     if any(pattern.match(input_string) for pattern in ACCEPTABLE_PATTERNS):
-        logging.info("Input is valid.")
-        return False  # No vulnerabilities detected
+        logging.info(f"Input is valid: {masked_input}")
+        return False
     else:
-        logging.warning(f"Potential SQL injection detected for input: '{input_string}'!")
-        return True  # Potential vulnerability
+        logging.warning(f"Potential SQL injection detected for input: '{masked_input}'!")
+        return True
 
 # Example usage of vulnerability detection with asyncio
-async def main(user_input):
-    user_input = user_input.strip()  # Process passed input
+async def main(user_input: str):
+    user_input = user_input.strip()
     if detect_vulnerabilities(user_input):
         print("Potential SQL injection detected!")
     else:
-        result = await get_user_data(user_input)
-        print(result)
+        try:
+            result = await get_user_data(user_input)
+            print(result)
+        except InputValidationError as ive:
+            print(f"Input error: {ive}")
+        except DatabaseError as de:
+            print(f"Error: {de}")
 
 if __name__ == '__main__':
     user_input = input("Enter username: ")

@@ -37,7 +37,7 @@ pattern_matcher = PatternMatcher([
 # SQL injection detection
 
 def detect_vulnerabilities(input_string):
-    # Perform a simple length check before regex matching
+    # Perform a simple length check before regex matching (reordered for performance)
     if len(input_string) == 0 or len(input_string) > 100:
         if VERBOSE:
             logging.warning(f"Input length invalid for potential SQL injection: '{input_string}'")

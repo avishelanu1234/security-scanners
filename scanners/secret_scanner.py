@@ -5,6 +5,7 @@ Detects hardcoded secrets in code using refined regex patterns with entropy chec
 
 import re
 import math
+from collections import Counter
 
 class SecretScanner:
     def __init__(self):
@@ -29,7 +30,7 @@ class SecretScanner:
             \s*[:=]\s*                       # Assignment operator with optional whitespace
             (['\"])                          # Opening quote (captured)
             ([a-zA-Z0-9_\-\.\+=\/]{20,})  # Secret value with min length 20
-            \1                              # Matching closing quote
+            \3                              # Matching closing quote (using backreference to group 3)
             (?!.*\*/)                       # Negative lookahead for end of block comment
             """,
             re.VERBOSE | re.IGNORECASE
@@ -50,13 +51,15 @@ class SecretScanner:
     def _calculate_entropy(self, data: str) -> float:
         """
         Calculate Shannon entropy of a string to estimate its randomness/complexity.
+        Optimized using collections.Counter for frequency counts.
         """
         if not data:
             return 0
-        entropy = 0
         length = len(data)
-        for x in set(data):
-            p_x = data.count(x) / length
+        frequency = Counter(data)
+        entropy = 0
+        for count in frequency.values():
+            p_x = count / length
             entropy += - p_x * math.log2(p_x)
         return entropy
 
@@ -99,27 +102,25 @@ class SecretScanner:
             if self._is_in_comment_or_test(code, match.start()):
                 continue
 
-            # Extract the secret value inside quotes
-            secret_value = re.search(r"['\"]([a-zA-Z0-9_\-\.\+=\/]{20,})['\"]", match.group(0))
-            if secret_value:
-                secret_str = secret_value.group(1)
+            # Extract the secret value inside quotes using group 4 from regex
+            secret_str = match.group(4)
 
-                # Exclude if secret looks like environment variable reference
-                if self.env_var_pattern.search(secret_str):
-                    continue
+            # Exclude if secret looks like environment variable reference
+            if self.env_var_pattern.search(secret_str):
+                continue
 
-                entropy = self._calculate_entropy(secret_str)
+            entropy = self._calculate_entropy(secret_str)
 
-                # Check for base64 encoded strings and adjust entropy threshold
-                is_base64 = bool(self.base64_pattern.match(secret_str))
+            # Check for base64 encoded strings and adjust entropy threshold
+            is_base64 = bool(self.base64_pattern.match(secret_str))
 
-                # Adjusted entropy threshold: 5.5 for base64 and 4.5 for others
-                entropy_threshold = 5.5 if is_base64 else 4.5
+            # Adjusted entropy threshold: 5.5 for base64 and 4.5 for others
+            entropy_threshold = 5.5 if is_base64 else 4.5
 
-                if entropy > entropy_threshold and self._has_special_chars(secret_str):
-                    violations.append(
-                        f"Possible hardcoded secret detected: '{match.group(1)}'. Use secure secret management instead."
-                    )
+            if entropy > entropy_threshold and self._has_special_chars(secret_str):
+                violations.append(
+                    f"Possible hardcoded secret detected: '{secret_str}'. Use secure secret management instead."
+                )
 
         return violations
 

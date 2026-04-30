@@ -11,9 +11,11 @@ log_level = logging.INFO if VERBOSE else logging.WARNING
 logging.basicConfig(level=log_level, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Cached compiled regex patterns for vulnerability detection
+CACHED_USERNAME_REGEX = re.compile(r'^[\w\-]+$')
+
 ACCEPTABLE_PATTERNS = [
     re.compile(r'^[\w_.+-]+@[\w-]+\.[a-zA-Z]{2,}$'),
-    re.compile(r'^[\w\-]+$'),
+    CACHED_USERNAME_REGEX,
     re.compile(r'^\d+$'),
     re.compile(r'^[\w\-]+@[\w]+\.[\w]{2,3}$'),
     re.compile(r'^\d{1,5}$'),
@@ -28,7 +30,12 @@ def detect_vulnerabilities(input_string):
     if len(input_string) == 0 or len(input_string) > 100:
         logging.warning(f"Input length invalid for potential SQL injection: '{input_string}'")
         return True
-    
+
+    # Use cached compiled regex specifically for username validation
+    if CACHED_USERNAME_REGEX.match(input_string):
+        logging.info("Input is valid.")
+        return False
+
     if any(pattern.match(input_string) for pattern in ACCEPTABLE_PATTERNS):
         logging.info("Input is valid.")
         return False

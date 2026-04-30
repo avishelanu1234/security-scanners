@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This document outlines the identified vulnerabilities within the **security-scanners** repository, as detailed in the SECURITY_ANALYSIS.md file. It also provides suggested actions to mitigate these risks, ensuring the security and integrity of the system.
+This document outlines the identified vulnerabilities within the **security-scanners** repository, as detailed in the SECURITY_ANALYSIS.md file and the pentest-findings repository. It also provides suggested actions to mitigate these risks, ensuring the security and integrity of the system.
 
 ---
 
@@ -24,7 +24,15 @@ This document outlines the identified vulnerabilities within the **security-scan
   - Conduct security testing (e.g., penetration testing) focusing on SQL injection.
   - Consider using an ORM (Object-Relational Mapping) tool that inherently protects against SQL injection.
 
-### 3. Concurrency Management in `sast_runner.py`
+### 3. Prompt Injection Vulnerability
+- **Risk**: Manipulation of prompts can lead to arbitrary SQL execution.
+- **Exploitability**: High.
+- **Suggested Actions**:
+  - Validate and sanitize all user inputs used in prompt generation.
+  - Implement strict controls and monitoring on prompt processing components.
+  - Conduct regular security reviews and testing focused on prompt injection vectors.
+
+### 4. Concurrency Management in `sast_runner.py`
 - **Risk**: Race conditions leading to data corruption.
 - **Exploitability**: Medium.
 - **Suggested Actions**:
@@ -32,13 +40,35 @@ This document outlines the identified vulnerabilities within the **security-scan
   - Use synchronization mechanisms (like locks or semaphores) to control access to shared resources.
   - Implement comprehensive unit tests that simulate concurrent access scenarios.
 
-### 4. Dynamic Input Handling
+### 5. Dynamic Input Handling
 - **Risk**: Inadequate validation could lead to SQL injection or other vulnerabilities.
 - **Exploitability**: Medium.
 - **Suggested Actions**:
   - Enhance input validation to cover more edge cases.
   - Use whitelisting approaches where possible, allowing only known good inputs.
   - Implement logging and alerting for suspicious input patterns.
+
+---
+
+## Security Gaps in Practices
+
+### 1. Environment Variable Management
+- **Risk**: Exposure of sensitive environment variables to unauthorized users or processes.
+- **Suggested Actions**:
+  - Ensure environment variables are not logged or exposed in error messages.
+  - Restrict access to environment variables to only necessary users and processes.
+
+### 2. Configuration File Security
+- **Risk**: Sensitive data leakage through configuration files committed to version control.
+- **Suggested Actions**:
+  - Implement strict policies to prevent sensitive configuration files from being committed.
+  - Review pull requests for accidental inclusion of sensitive data.
+
+### 3. CI/CD Integration
+- **Risk**: Vulnerabilities reaching production due to lack of integrated security checks.
+- **Suggested Actions**:
+  - Incorporate automated security scanning and secret detection in CI/CD pipelines.
+  - Establish regular audits and reviews of CI/CD security configurations.
 
 ---
 
@@ -54,4 +84,4 @@ This document outlines the identified vulnerabilities within the **security-scan
 
 ## Conclusion
 
-The identified vulnerabilities in the **security-scanners** repository highlight the importance of implementing robust security measures and mitigation strategies. By addressing these risks through the suggested actions, the repository can maintain a strong security posture and protect against potential threats. Regular reviews, updates, and training for the development team on secure coding practices are essential for ongoing security management.
+The updated vulnerabilities and security gaps outlined in this document emphasize the necessity of a comprehensive security strategy. Addressing both technical vulnerabilities and procedural gaps will significantly strengthen the security posture of the system. Ongoing training, reviews, and updates are essential to adapt to emerging threats and maintain resilience.

@@ -41,7 +41,7 @@ jobs:
       - name: Run detect-secrets scan
         run: |
           detect-secrets scan > .secrets.baseline
-          detect-secrets audit .secrets.baseline
+          detect-secrets audit .secrets.baseline --all-files --no-banner
 
       - name: Upload Bandit and Secrets scan reports
         uses: actions/upload-artifact@v3
@@ -59,7 +59,7 @@ jobs:
   dast_scan:
     name: Dynamic Application Security Testing (DAST)
     runs-on: ubuntu-latest
-    needs: sast_scan
+    # Removed 'needs' to run in parallel with sast_scan
 
     env:
       TARGET_URL: http://localhost:8080
@@ -71,8 +71,21 @@ jobs:
       - name: Start application
         run: |
           # Replace with actual app startup command
-          echo "Starting application with secure config..."
-          sleep 10 &
+          ./start-application.sh &
+          # Health check loop to wait until app is ready
+          for i in {1..30}; do
+            if curl -sSf ${{ env.TARGET_URL }}/health; then
+              echo "Application is ready"
+              break
+            else
+              echo "Waiting for application to be ready..."
+              sleep 2
+            fi
+          done
+          if ! curl -sSf ${{ env.TARGET_URL }}/health; then
+            echo "Application failed to start"
+            exit 1
+          fi
 
       - name: Install OWASP ZAP
         run: |

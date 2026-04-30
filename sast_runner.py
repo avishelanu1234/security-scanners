@@ -8,27 +8,30 @@ from html import escape
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Thread-safe connection pool setup
+# Thread-safe connection pool setup with wait mechanism
 class ConnectionPool:
     def __init__(self, db_file, pool_size=5):
         self.pool_size = pool_size
         self.db_file = db_file
         self.lock = threading.Lock()
         self.pool = [self.create_connection() for _ in range(pool_size)]
+        self.condition = threading.Condition(self.lock)
 
     def create_connection(self):
         return sqlite3.connect(self.db_file)
 
-    def get_connection(self):
-        with self.lock:
-            if self.pool:
-                return self.pool.pop()
-            else:
-                raise Exception("No available connections in the pool.")
+    def get_connection(self, timeout=10):
+        with self.condition:
+            if not self.pool:
+                # Wait for a connection to be returned
+                if not self.condition.wait(timeout=timeout):
+                    raise Exception("Timeout waiting for available connection in the pool.")
+            return self.pool.pop()
 
     def return_connection(self, conn):
-        with self.lock:
+        with self.condition:
             self.pool.append(conn)
+            self.condition.notify()
 
 # Initialize the connection pool
 connection_pool = ConnectionPool('database.db')

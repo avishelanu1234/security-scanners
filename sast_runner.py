@@ -1,12 +1,13 @@
 import logging
 import re
 import asyncio
+import time
 from html import escape
 from typing import List, Optional
 from database import get_user_data
 
 # Configure logging with verbosity setting
-VERBOSE = False  # Set default verbosity to False to reduce logging overhead
+VERBOSE = True  # Enable verbosity to track timing metrics
 log_level = logging.INFO if VERBOSE else logging.WARNING
 logging.basicConfig(level=log_level, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -70,13 +71,16 @@ async def process_usernames(usernames: List[str]):
     results = await asyncio.gather(*tasks, return_exceptions=True)
     return results
 
-# Example usage with batch input handling
+# Example usage with batch input handling and timing metrics
 async def main(usernames: Optional[List[str]] = None):
     if usernames is None:
-        # Single input mode without blocking input() for dynamic input handling
         print("Awaiting usernames as function parameter instead of blocking input().")
         usernames = []
+    start_time = time.perf_counter()
     results = await process_usernames(usernames)
+    end_time = time.perf_counter()
+    duration = end_time - start_time
+    logging.info(f"Scan completed in {duration:.4f} seconds.")
     for result in results:
         if isinstance(result, Exception):
             print(f"Error: {result}")
@@ -86,8 +90,6 @@ async def main(usernames: Optional[List[str]] = None):
 if __name__ == '__main__':
     import sys
     if len(sys.argv) > 1:
-        # Batch mode from command line arguments
         asyncio.run(main(sys.argv[1:]))
     else:
-        # Run with empty list to avoid blocking input
         asyncio.run(main([]))

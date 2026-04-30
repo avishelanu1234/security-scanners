@@ -2,51 +2,62 @@ import sqlite3
 import logging
 import re
 import asyncio
+import threading
 from sqlite3 import pool
 
 # Configure logging with structured format
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Connection pool setup
+# Thread-safe connection pool setup with lifecycle management
 class ConnectionPool:
     def __init__(self, db_file, pool_size=5):
         self.pool_size = pool_size
-        self.pool = [self.create_connection(db_file) for _ in range(pool_size)]
+        self.db_file = db_file
+        self.lock = threading.Lock()
+        self.pool = [self.create_connection() for _ in range(pool_size)]
 
-    def create_connection(self, db_file):
-        return sqlite3.connect(db_file)
+    def create_connection(self):
+        conn = sqlite3.connect(self.db_file)
+        return conn
 
     def get_connection(self):
-        if self.pool:
-            return self.pool.pop()
-        else:
-            raise Exception("No available connections in the pool.")
+        with self.lock:
+            if self.pool:
+                return self.pool.pop()
+            else:
+                raise Exception("No available connections in the pool.")
 
     def return_connection(self, conn):
-        self.pool.append(conn)
+        with self.lock:
+            try:
+                # Validate connection by executing a lightweight query
+                conn.execute('SELECT 1')
+                self.pool.append(conn)
+            except sqlite3.Error:
+                # If connection is invalid, recreate and add
+                new_conn = self.create_connection()
+                self.pool.append(new_conn)
 
 # Initialize the connection pool
 connection_pool = ConnectionPool('database.db')
 
-# Compiled regex for username validation, cached globally
-USERNAME_REGEX = re.compile(r'^[\w_]{1,50}$')
+# Improved regex for username validation (alphanumeric, underscore, hyphen, length 1-50)
+USERNAME_REGEX = re.compile(r'^[\w\-]{1,50}$')
 
-# Compiled regex patterns for vulnerability detection, cached globally
+# Tightened regex patterns for SQL injection detection and input validation
 ACCEPTABLE_PATTERNS = [
     re.compile(r'^[\w_.+-]+@[\w-]+\.[a-zA-Z]{2,}$'),  # Valid email format
-    re.compile(r'^[\w_]+$'),  # Alphanumeric usernames
-    re.compile(r'^[\d]+$'),  # Numeric input
-    re.compile(r'^[\w_]+@[\w]+\.[\w]{2,3}$'),  # Shortened email format
-    re.compile(r'^[\d]{1,5}$'),  # Numeric input within 1 to 5 digits
-    re.compile(r'^[\w_]+\s*\w*$'),  # Two-word usernames
-    re.compile(r'^[\-a-zA-Z]+$'),  # Allow hyphenated words
-    re.compile(r'^[\w\s]+$'),  # Alphanumeric with spaces
-    re.compile(r'^[\w\s]+[\.\,\'\"\-]+[\w\s]+$')  # Allows punctuation between words
+    re.compile(r'^[\w\-]+$'),  # Alphanumeric usernames with hyphen
+    re.compile(r'^\d+$'),  # Numeric input
+    re.compile(r'^[\w\-]+@[\w]+\.[\w]{2,3}$'),  # Shortened email format
+    re.compile(r'^\d{1,5}$'),  # Numeric input within 1 to 5 digits
+    re.compile(r'^[\w\-]+\s?\w*$'),  # Two-word usernames with optional space
+    re.compile(r'^[a-zA-Z\-]+$'),  # Allow hyphenated words
 ]
 
 # Asynchronous function to get user data securely
 async def get_user_data(username):
-    # Validate user input with length check first
+    # Validate user input with length and regex check
     if not isinstance(username, str) or len(username) > 50 or len(username) == 0:
         raise ValueError("Invalid username input.")
     if not USERNAME_REGEX.match(username):

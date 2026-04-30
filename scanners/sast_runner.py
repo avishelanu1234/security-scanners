@@ -49,13 +49,13 @@ def detect_cloud_vulnerabilities(user_input):
     vulnerabilities = detect_vulnerabilities(user_input)  # Existing SQL injection check
     
     # Add cloud-specific checks with updated regex patterns
-    if re.search(r'\b(AKIA|ASIA)[0-9A-Z]{16}\b', user_input):
+    if re.search(r'\b(AKIA|ASIA|AGPA|AIDA|ANPA|ANVA|ASIA|ASIA|ACCA|AROA|AIPA)[A-Z0-9]{16}\b', user_input):
         vulnerabilities.append("Potential AWS credential exposed.")
     
-    if re.search(r'\b(?i)([A-Za-z0-9]{32}|[A-Za-z0-9]{40}|[A-F0-9]{40}|(?<=api_key=)[A-Za-z0-9]{32})\b', user_input):
+    if re.search(r'\b(?i)(?:api_key=)?[A-Za-z0-9]{32,40}\b', user_input):
         vulnerabilities.append("Potential API key exposed.")
     
-    if re.search(r'\bAZURE[A0-9]{36}\b', user_input):
+    if re.search(r'\b(?:azure|Azure)?[A-Za-z0-9]{36}\b', user_input):
         vulnerabilities.append("Potential Azure credential exposed.")
     
     if re.search(r'\bAIza[0-9A-Za-z-_]{35}\b', user_input):

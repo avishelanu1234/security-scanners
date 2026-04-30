@@ -115,3 +115,93 @@ jobs:
         run: |
           # Example placeholder for issue creation automation
           echo "Create GitHub issues for high severity vulnerabilities"
+
+  post_sast_comment:
+    name: Post SAST Scan Results Comment
+    runs-on: ubuntu-latest
+    needs: sast_scan
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Download Bandit report
+        uses: actions/download-artifact@v3
+        with:
+          name: bandit-report
+          path: ./reports
+
+      - name: Parse and format Bandit report comment
+        id: format_comment
+        run: |
+          HIGH_ISSUES=$(jq '[.results[] | select(.issue_severity=="HIGH")] | length' ./reports/bandit-report.json)
+          echo "::set-output name=comment::**SAST Scan Results:** $HIGH_ISSUES high severity issues found. [View full report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+
+      - name: Post PR comment with SAST results
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '${{ steps.format_comment.outputs.comment }}'
+            })
+
+  post_dast_comment:
+    name: Post DAST Scan Results Comment
+    runs-on: ubuntu-latest
+    needs: dast_scan
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Download ZAP report
+        uses: actions/download-artifact@v3
+        with:
+          name: zap-report
+          path: ./reports
+
+      - name: Parse and format ZAP report comment
+        id: format_comment
+        run: |
+          if grep -q "High" ./reports/zap-report.html; then
+            echo "::set-output name=comment::**DAST Scan Results:** Critical vulnerabilities found. [View full report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+          else
+            echo "::set-output name=comment::**DAST Scan Results:** No critical vulnerabilities found."
+          fi
+
+      - name: Post PR comment with DAST results
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '${{ steps.format_comment.outputs.comment }}'
+            })
+
+  post_compliance_comment:
+    name: Post Compliance Scan Results Comment
+    runs-on: ubuntu-latest
+    needs: compliance_check
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Download compliance reports
+        uses: actions/download-artifact@v3
+        with:
+          name: compliance-reports
+          path: ./reports
+
+      - name: Parse and format compliance report comment
+        id: format_comment
+        run: |
+          # Placeholder parsing logic, customize for actual compliance report format
+          echo "::set-output name=comment::**Compliance Scan Results:** See uploaded compliance reports for details."
+
+      - name: Post PR comment with compliance results
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '${{ steps.format_comment.outputs.comment }}'
+            })

@@ -9,11 +9,12 @@ import math
 class SecretScanner:
     def __init__(self):
         # Refined regex pattern for hardcoded secrets with exclusions for common non-secret keywords
-        # Excludes words like 'tokenize', 'passwordless', etc. using negative lookahead
-        # Increased minimum secret length to 20 characters to reduce false positives
+        # Added more exclusions like 'notoken', 'nopassword', 'password123', 'passphrase', 'apikeytest', etc.
+        # Increased minimum secret length to 25 characters to reduce false positives
         self.hardcode_pattern = re.compile(
-            r"(?i)\b(?!tokenize|passwordless)(api[-_] ?key|apikey|token|secret|password|passwd|auth|access[-_] ?key|secret[-_] ?key|private[-_] ?key|client[-_] ?secret|client[-_] ?key)\b\s*[:=]\s*['"]"
-            r"[a-zA-Z0-9_\-\.\+=\/]{20,}['"]"
+            r"(?i)\b(?!tokenize|passwordless|notoken|nopassword|password123|passphrase|apikeytest|secret123|dummy|example|changeme|default|sample|testkey|placeholder)"
+            r"(api[-_] ?key|apikey|token|secret|password|passwd|auth|access[-_] ?key|secret[-_] ?key|private[-_] ?key|client[-_] ?secret|client[-_] ?key)\b\s*[:=]\s*['"]"
+            r"[a-zA-Z0-9_\-\.\+=\/]{25,}['"]"
         )
 
     def _calculate_entropy(self, data: str) -> float:
@@ -42,12 +43,12 @@ class SecretScanner:
         matches = self.hardcode_pattern.finditer(code)
         for match in matches:
             # Extract the secret value inside quotes
-            secret_value = re.search(r"['\"]([a-zA-Z0-9_\-\.\+=\/]{20,})['\"]", match.group(0))
+            secret_value = re.search(r"['\"]([a-zA-Z0-9_\-\.\+=\/]{25,})['\"]", match.group(0))
             if secret_value:
                 secret_str = secret_value.group(1)
                 entropy = self._calculate_entropy(secret_str)
-                # Threshold entropy to consider it a likely secret (e.g., >3.5)
-                if entropy > 3.5:
+                # Adjusted threshold entropy to consider it a likely secret (e.g., >4.0)
+                if entropy > 4.0:
                     violations.append(
                         f"Possible hardcoded secret detected: '{match.group(1)}'. Use secure secret management instead."
                     )
@@ -57,9 +58,9 @@ class SecretScanner:
 # Example usage
 if __name__ == '__main__':
     sample_code = """
-    api_key = '1234567890abcdef1234567890'
+    api_key = '1234567890abcdef1234567890abcdef'
     password: 'mypassword1234'
-    token = 'tokenvalue12345tokenvalue12345'
+    token = 'tokenvalue12345tokenvalue12345tokenvalue12345'
     """
     scanner = SecretScanner()
     results = scanner.scan_code(sample_code)

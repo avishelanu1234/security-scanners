@@ -8,30 +8,36 @@ import math
 
 class SecretScanner:
     def __init__(self):
-        # Further refined regex pattern for hardcoded secrets with exclusions for common non-secret keywords
-        # Added more exclusions like 'notoken', 'nopassword', 'password123', 'passphrase', 'apikeytest', etc.
-        # Increased minimum secret length to 40 characters to further reduce false positives
-        # Added patterns for detecting AWS and Azure keys specifically
-        # Added negative lookbehind/lookahead to exclude matches in comments
+        # Refined regex pattern for hardcoded secrets with exclusions for common non-secret keywords and patterns
+        # Added exclusions for environment variable patterns, common placeholders, test code, and inline comments
+        # Adjusted length and entropy thresholds based on secret type
         self.hardcode_pattern = re.compile(
             r"""(?ix)                          # Ignore case, verbose mode
             (?<!#.*?)                         # Negative lookbehind for single-line comment
             (?<!/\*.*?)                      # Negative lookbehind for start of block comment
             \b                                # Word boundary
-            (?!                              # Negative lookahead for excluded keywords
-                tokenize|passwordless|notoken|nopassword|password123|passphrase|apikeytest|secret123|dummy|example|changeme|default|sample|testkey|placeholder|dummykey|testsecret|dummyvalue|fakekey
+            (?!                              # Negative lookahead for excluded keywords and placeholders
+                tokenize|passwordless|notoken|nopassword|password123|passphrase|apikeytest|secret123|dummy|example|changeme|default|sample|testkey|placeholder|dummykey|testsecret|dummyvalue|fakekey|
+                your_api_key|your_secret_here|replace_me|<your_api_key>|<your_secret>|<replace_me>|
+                oauth_token|csrf_token|session_token
             )
             (api[-_ ]?key|apikey|token|secret|password|passwd|auth|access[-_ ]?key|
              secret[-_ ]?key|private[-_ ]?key|client[-_ ]?secret|client[-_ ]?key|aws_access_key_id|aws_secret_access_key|azure_key)
             \b                               # Word boundary
             \s*[:=]\s*                       # Assignment operator with optional whitespace
             (['\"])                          # Opening quote (captured)
-            ([a-zA-Z0-9_\-\.\+=\/]{40,})    # Secret value with min length 40
+            ([a-zA-Z0-9_\-\.\+=\/]{20,})  # Secret value with min length 20
             \1                              # Matching closing quote
             (?!.*\*/)                       # Negative lookahead for end of block comment
             """,
             re.VERBOSE | re.IGNORECASE
         )
+
+        # Pattern to exclude environment variable references
+        self.env_var_pattern = re.compile(r"\$\{?[A-Za-z0-9_]+\}?")
+
+        # Pattern to detect base64 encoded strings
+        self.base64_pattern = re.compile(r"^[A-Za-z0-9+/=\n\r]{20,}$")
 
     def _calculate_entropy(self, data: str) -> float:
         """
@@ -66,17 +72,29 @@ class SecretScanner:
         matches = self.hardcode_pattern.finditer(code)
         for match in matches:
             # Extract the secret value inside quotes
-            secret_value = re.search(r"['\"]([a-zA-Z0-9_\-\.\+=\/]{40,})['\"]", match.group(0))
+            secret_value = re.search(r"['\"]([a-zA-Z0-9_\-\.\+=\/]{20,})['\"]", match.group(0))
             if secret_value:
                 secret_str = secret_value.group(1)
+
+                # Exclude if secret looks like environment variable reference
+                if self.env_var_pattern.search(secret_str):
+                    continue
+
                 entropy = self._calculate_entropy(secret_str)
-                # Increased threshold entropy to consider it a likely secret (e.g., >5.5)
-                if entropy > 5.5 and self._has_special_chars(secret_str):
+
+                # Check for base64 encoded strings and adjust entropy threshold
+                is_base64 = bool(self.base64_pattern.match(secret_str))
+
+                # Adjusted entropy threshold: 5.5 for base64 and 4.5 for others
+                entropy_threshold = 5.5 if is_base64 else 4.5
+
+                if entropy > entropy_threshold and self._has_special_chars(secret_str):
                     violations.append(
                         f"Possible hardcoded secret detected: '{match.group(1)}'. Use secure secret management instead."
                     )
 
         return violations
+
 
 # Example usage
 if __name__ == '__main__':
@@ -86,6 +104,8 @@ if __name__ == '__main__':
     token = 'tokenvalue12345tokenvalue12345tokenvalue12345tokenvalue12345tokenvalue12345'
     aws_access_key_id = 'AKIAIOSFODNN7EXAMPLE'
     azure_key = 'abcdef1234567890abcdef1234567890'
+    env_var = "$API_KEY"
+    placeholder = '<your_api_key>'
     """
     scanner = SecretScanner()
     results = scanner.scan_code(sample_code)

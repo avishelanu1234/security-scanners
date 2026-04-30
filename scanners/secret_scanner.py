@@ -10,6 +10,7 @@ class SecretScanner:
     def __init__(self):
         # Refined regex pattern for hardcoded secrets with exclusions for common non-secret keywords and patterns
         # Added exclusions for environment variable patterns, common placeholders, test code, and inline comments
+        # Added negative lookaheads for common file paths, URLs, and config keys to reduce false positives
         # Adjusted length and entropy thresholds based on secret type
         self.hardcode_pattern = re.compile(
             r"""(?ix)                          # Ignore case, verbose mode
@@ -19,7 +20,8 @@ class SecretScanner:
             (?!                              # Negative lookahead for excluded keywords and placeholders
                 tokenize|passwordless|notoken|nopassword|password123|passphrase|apikeytest|secret123|dummy|example|changeme|default|sample|testkey|placeholder|dummykey|testsecret|dummyvalue|fakekey|
                 your_api_key|your_secret_here|replace_me|<your_api_key>|<your_secret>|<replace_me>|
-                oauth_token|csrf_token|session_token
+                oauth_token|csrf_token|session_token|
+                config|config_path|filepath|filename|url|endpoint|host|domain|port|path
             )
             (api[-_ ]?key|apikey|token|secret|password|passwd|auth|access[-_ ]?key|
              secret[-_ ]?key|private[-_ ]?key|client[-_ ]?secret|client[-_ ]?key|aws_access_key_id|aws_secret_access_key|azure_key)
@@ -38,6 +40,12 @@ class SecretScanner:
 
         # Pattern to detect base64 encoded strings
         self.base64_pattern = re.compile(r"^[A-Za-z0-9+/=\n\r]{20,}$")
+
+        # Pattern to detect comments and docstrings
+        self.comment_pattern = re.compile(r"(?m)^\s*#|""""""|'''''')
+
+        # Pattern to detect test code lines
+        self.test_code_pattern = re.compile(r"(?i)test|dummy|example|sample|mock|fake")
 
     def _calculate_entropy(self, data: str) -> float:
         """
@@ -59,6 +67,22 @@ class SecretScanner:
         special_chars_pattern = re.compile(r'[!@#$%^&*(),.?":{}|<>]')
         return bool(special_chars_pattern.search(data))
 
+    def _is_in_comment_or_test(self, code: str, match_start: int) -> bool:
+        """
+        Check if the matched secret is within a comment, docstring, or test code context.
+        """
+        # Check if line containing match is a comment or docstring
+        lines = code[:match_start].splitlines()
+        if lines:
+            last_line = lines[-1].strip()
+            if last_line.startswith('#') or '"""' in last_line or "'''" in last_line:
+                return True
+        # Check for test code indications in surrounding lines
+        surrounding_code = code[max(0, match_start-50):match_start+50].lower()
+        if self.test_code_pattern.search(surrounding_code):
+            return True
+        return False
+
     def scan_code(self, code: str) -> list[str]:
         """
         Scans the given code string for hardcoded secret patterns.
@@ -71,6 +95,10 @@ class SecretScanner:
 
         matches = self.hardcode_pattern.finditer(code)
         for match in matches:
+            # Skip if match is in comment, docstring or test code context
+            if self._is_in_comment_or_test(code, match.start()):
+                continue
+
             # Extract the secret value inside quotes
             secret_value = re.search(r"['\"]([a-zA-Z0-9_\-\.\+=\/]{20,})['\"]", match.group(0))
             if secret_value:

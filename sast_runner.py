@@ -5,8 +5,9 @@ import asyncio
 import threading
 from html import escape
 
-# Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+# Configure logging with verbosity control
+logging.basicConfig(level=logging.WARNING, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger()
 
 # Thread-safe connection pool setup
 class ConnectionPool:
@@ -55,8 +56,11 @@ def sanitize_input(user_input: str) -> str:
 # Asynchronous function to get user data securely
 async def get_user_data(username):
     sanitized_username = sanitize_input(username)
-    if not isinstance(sanitized_username, str) or not USERNAME_REGEX.match(sanitized_username):
-        raise ValueError("Invalid username input.")
+    # Add lightweight length check before regex matching
+    if not isinstance(sanitized_username, str) or len(sanitized_username) > 50 or len(sanitized_username) < 1:
+        raise ValueError("Invalid username input length.")
+    if not USERNAME_REGEX.match(sanitized_username):
+        raise ValueError("Invalid username input format.")
     
     connection = connection_pool.get_connection()
     try:
@@ -72,7 +76,7 @@ async def get_user_data(username):
             }
         return None
     except sqlite3.Error as e:
-        logging.error(f"Database error for user '{sanitized_username}': {e}")
+        logger.error(f"Database error for user '{sanitized_username}': {e}")
         raise
     finally:
         connection_pool.return_connection(connection)
@@ -81,10 +85,10 @@ async def get_user_data(username):
 
 def detect_vulnerabilities(input_string):
     if any(pattern.match(input_string) for pattern in ACCEPTABLE_PATTERNS):
-        logging.info("Input is valid.")
+        logger.info("Input is valid.")
         return False
     else:
-        logging.warning(f"Potential SQL injection detected for input: '{input_string}'!")
+        logger.warning(f"Potential SQL injection detected for input: '{input_string}'!")
         return True
 
 # Example usage

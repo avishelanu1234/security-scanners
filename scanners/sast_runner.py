@@ -48,17 +48,21 @@ def detect_vulnerabilities(user_input):
 def detect_cloud_vulnerabilities(user_input):
     vulnerabilities = detect_vulnerabilities(user_input)  # Existing SQL injection check
     
-    # Add cloud-specific checks with updated regex patterns
-    if re.search(r'\b(AKIA|ASIA)[0-9A-Z]{16}\b', user_input):
+    # Improved regex with contextual anchoring and stricter patterns
+    # AWS Access Key ID: starts with AKIA or ASIA followed by 16 uppercase alphanumeric characters, preceded by common keywords
+    if re.search(r'(?i)(?:aws_access_key_id|aws_key|aws_secret|access_key)["\'=:\s]*\b(AKIA|ASIA)[0-9A-Z]{16}\b', user_input):
         vulnerabilities.append("Potential AWS credential exposed.")
     
-    if re.search(r'\b(?i)([A-Za-z0-9]{32}|[A-Za-z0-9]{40}|[A-F0-9]{40}|(?<=api_key=)[A-Za-z0-9]{32})\b', user_input):
+    # API Key: 32 or 40 alphanumeric characters preceded by common keywords like api_key, apikey, token
+    if re.search(r'(?i)(?:api[_-]?key|token)["\'=:\s]*\b([A-Za-z0-9]{32}|[A-Za-z0-9]{40})\b', user_input):
         vulnerabilities.append("Potential API key exposed.")
     
-    if re.search(r'\bAZURE[A0-9]{36}\b', user_input):
+    # Azure credential: preceded by 'azure_' or 'azurekey' keywords
+    if re.search(r'(?i)(?:azure[_-]?key|azurekey)["\'=:\s]*\b[A0-9a-f]{32,36}\b', user_input):
         vulnerabilities.append("Potential Azure credential exposed.")
     
-    if re.search(r'\bAIza[0-9A-Za-z-_]{35}\b', user_input):
+    # Google Cloud API key: preceded by 'gcp_key' or 'google_api_key' keywords
+    if re.search(r'(?i)(?:gcp[_-]?key|google[_-]?api[_-]?key)["\'=:\s]*\bAIza[0-9A-Za-z-_]{35}\b', user_input):
         vulnerabilities.append("Potential Google Cloud API key exposed.")
     
     return vulnerabilities

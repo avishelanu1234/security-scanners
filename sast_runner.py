@@ -3,9 +3,17 @@ import logging
 import re
 import asyncio
 from sqlite3 import pool
+from flask_limiter import Limiter
+from flask import Flask, request
+from flask_limiter.util import get_remote_address
+
+app = Flask(__name__)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+# Setup rate limiter
+limiter = Limiter(app, key_func=get_remote_address)
 
 # Connection pool setup
 class ConnectionPool:
@@ -41,10 +49,11 @@ ACCEPTABLE_PATTERNS = [
     re.compile(r'^[\w_]+\s*\w*$'),  # Two-word usernames
     re.compile(r'^[\-a-zA-Z]+$'),  # Allow hyphenated words
     re.compile(r'^[\w\s]+$'),  # Alphanumeric with spaces
-    re.compile(r'^[\w\s]+[\.\,\'\"\-]+[\w\s]+$')  # Allows punctuation between words
+    re.compile(r'^[\w\s]+[\.\,\'"\-]+[\w\s]+$')  # Allows punctuation between words
 ]
 
 # Asynchronous function to get user data securely
+@limiter.limit("5 per minute")  # Rate limiting
 async def get_user_data(username):
     # Validate user input
     if not isinstance(username, str) or not USERNAME_REGEX.match(username):
@@ -79,17 +88,22 @@ def detect_vulnerabilities(input_string):
         logging.info("Input is valid.")
         return False  # No vulnerabilities detected
     else:
-        logging.warning(f"Potential SQL injection detected for input: '{input_string}'!")
+        logging.warning(f"Potential SQL injection detected from {request.remote_addr} for input: '{input_string}'!")
         return True  # Potential vulnerability
 
 # Example usage of vulnerability detection with asyncio
-async def main():
-    user_input = input("Enter username: ").strip()  # Dynamic input
+@app.route('/check_user', methods=['POST'])
+@limiter.limit("5 per minute")  # Rate limiting
+async def check_user():
+    user_input = request.form.get('username', '').strip()  # Dynamic input
     if detect_vulnerabilities(user_input):
-        print("Potential SQL injection detected!")
+        return "Potential SQL injection detected!", 400
     else:
         result = await get_user_data(user_input)
-        print(result)
+        if result:
+            return result
+        else:
+            return "User not found", 404
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    app.run(debug=True)

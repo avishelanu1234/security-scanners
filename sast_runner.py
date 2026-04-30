@@ -33,8 +33,14 @@ class ConnectionPool:
 # Initialize the connection pool
 connection_pool = ConnectionPool('database.db')
 
-# Improved regex for username validation
-USERNAME_REGEX = re.compile(r'^[\w\-]{1,50}$')
+# Improved regex for username validation (cached)
+_cached_username_regex = None
+
+def get_username_regex():
+    global _cached_username_regex
+    if _cached_username_regex is None:
+        _cached_username_regex = re.compile(r'^[\w\-]{1,50}$')
+    return _cached_username_regex
 
 # Regex patterns for vulnerability detection
 ACCEPTABLE_PATTERNS = [
@@ -55,7 +61,8 @@ def sanitize_input(user_input: str) -> str:
 # Asynchronous function to get user data securely
 async def get_user_data(username):
     sanitized_username = sanitize_input(username)
-    if not isinstance(sanitized_username, str) or not USERNAME_REGEX.match(sanitized_username):
+    regex = get_username_regex()
+    if not isinstance(sanitized_username, str) or not regex.match(sanitized_username):
         raise ValueError("Invalid username input.")
     
     connection = connection_pool.get_connection()

@@ -1,54 +1,58 @@
 # Database Configuration
 # Use environment variables or secret management to populate these values securely.
+# Ensure encrypted connections (TLS/SSL) are used for database access.
 database:
   host: ${DB_HOST}        # Database host address
   user: ${DB_USER}        # Database user name
   password: ${DB_PASSWORD} # Database password (keep secret!)
+  use_ssl: true           # Enforce encrypted connection
 
 # Secrets Configuration
-# Store sensitive tokens securely using environment variables or secret management.
+# Use dedicated secrets management solutions and rotate tokens regularly.
 secrets:
   api_token: ${API_TOKEN}  # API token for external integrations
+  secret_manager: "HashiCorp Vault"  # Example secrets manager used
+  token_rotation_days: 30   # Rotate tokens every 30 days
 
 # Whitelist Configuration
-# List known false positives to exclude from alerts.
-# Consider managing this list externally if it grows large to simplify updates.
+# Consider managing whitelist externally for easier updates.
 whitelist:
-  - "hardcoded_api_key"
-  - "known_secret"
-  - "test_api_key"
-  - "example_secret"
-  - "new_false_positive_1"
-  - "new_false_positive_2"
-  - "additional_false_positive_1"
-  - "additional_false_positive_2"
+  source: "centralized_service"  # External whitelist source for easier maintenance
+  entries:
+    - "hardcoded_api_key"
+    - "known_secret"
+    - "test_api_key"
+    - "example_secret"
+    - "new_false_positive_1"
+    - "new_false_positive_2"
+    - "additional_false_positive_1"
+    - "additional_false_positive_2"
 
 # Sensitivity Levels
-# Controls the aggressiveness of detection to reduce noise.
-# Options: low, medium, high
-# - low: fewer alerts, may miss some issues
-# - medium: balanced detection and noise
-# - high: more alerts, higher chance of false positives
+# Adjust sensitivity based on environment criticality.
 sensitivity:
   level: medium
+  review_interval_days: 30  # Periodic review of sensitivity impact
 
 # Scanning Rules
-# Enable or disable different scanning capabilities.
-# Adjust max_false_positive_rate to balance detection sensitivity and noise.
+# Enable comprehensive scanning capabilities.
 scanning_rules:
   enable_sensitive_detection: true
   enable_dependency_scanning: true
   enable_secrets_detection: true
+  enable_container_scanning: true        # Added container security scanning
+  enable_iac_scanning: true              # Added infrastructure as code scanning
   max_false_positive_rate: 1%
 
 # Scan Scheduling
-# Define scan frequency and timing to automate security assessments.
+# Schedule scans considering environment risk and system impact.
 scan_schedule:
   frequency: daily        # Options: hourly, daily, weekly, monthly
   time: "02:00"          # Time of day to run scans (24h format, UTC)
+  low_usage_window: true  # Prefer scans during low system usage
 
 # Notifications
-# Configure alerts and notification channels for scan results.
+# Configure alerts with escalation and incident response integration.
 notifications:
   email_alerts: true
   email_recipients:
@@ -56,14 +60,28 @@ notifications:
     - dev-team@example.com
   slack_alerts: true
   slack_channel: "#security-alerts"
+  escalation_policy: "critical_issues_to_oncall"  # Escalate critical alerts
+  incident_response_integration: true
 
 # Issue Tracking Integration
-# Automatically create or update issues in your tracking system based on scan findings.
+# Automate issue management with backlog review.
 issue_tracking:
   enabled: true
   system: jira            # Supported: jira, github, gitlab, etc.
-  project_key: SEC       # Project or repo identifier
+  project_key: SEC        # Project or repo identifier
   assignee: security_lead
+  backlog_review_days: 14  # Periodic backlog review to avoid alert fatigue
+  multi_system_integration: false
+
+# Reporting and Metrics
+# Track trends and scan effectiveness.
+reporting:
+  enabled: true
+  dashboard_url: "https://security-dashboard.example.com"
+  report_frequency: weekly
 
 # Additional Recommendations
-# Regularly review and update scanning rules and configurations based on feedback and emerging threats.
+# Include automated remediation and manual reviews.
+automation:
+  auto_remediation_enabled: false
+  manual_review_interval_days: 90  # Schedule manual reviews and penetration tests

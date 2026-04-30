@@ -10,7 +10,7 @@ VERBOSE = True
 log_level = logging.INFO if VERBOSE else logging.WARNING
 logging.basicConfig(level=log_level, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Regex patterns for vulnerability detection
+# Cached compiled regex patterns for vulnerability detection
 ACCEPTABLE_PATTERNS = [
     re.compile(r'^[\w_.+-]+@[\w-]+\.[a-zA-Z]{2,}$'),
     re.compile(r'^[\w\-]+$'),

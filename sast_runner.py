@@ -3,6 +3,7 @@ import logging
 import re
 import asyncio
 import threading
+import time
 from html import escape
 
 # Configure logging
@@ -15,23 +16,29 @@ class ConnectionPool:
         self.db_file = db_file
         self.lock = threading.Lock()
         self.pool = [self.create_connection() for _ in range(pool_size)]
+        self.condition = threading.Condition(self.lock)
 
     def create_connection(self):
         return sqlite3.connect(self.db_file)
 
-    def get_connection(self):
-        with self.lock:
-            if self.pool:
-                return self.pool.pop()
-            else:
-                raise Exception("No available connections in the pool.")
+    def get_connection(self, timeout=None):
+        with self.condition:
+            start_time = time.time()
+            while not self.pool:
+                waited = self.condition.wait(timeout)
+                if not waited:
+                    elapsed = time.time() - start_time
+                    if timeout is not None and elapsed >= timeout:
+                        raise Exception("Timeout waiting for an available connection in the pool.")
+            return self.pool.pop()
 
     def return_connection(self, conn):
-        with self.lock:
+        with self.condition:
             self.pool.append(conn)
+            self.condition.notify()
 
-# Initialize the connection pool
-connection_pool = ConnectionPool('database.db')
+# Initialize the connection pool with configurable size
+connection_pool = ConnectionPool('database.db', pool_size=10)  # Example: pool size set to 10
 
 # Improved regex for username validation
 USERNAME_REGEX = re.compile(r'^[\w\-]{1,50}$')
@@ -53,12 +60,17 @@ def sanitize_input(user_input: str) -> str:
     return escape(user_input)
 
 # Asynchronous function to get user data securely
-async def get_user_data(username):
+async def get_user_data(username, connection_timeout=5):
     sanitized_username = sanitize_input(username)
     if not isinstance(sanitized_username, str) or not USERNAME_REGEX.match(sanitized_username):
         raise ValueError("Invalid username input.")
     
-    connection = connection_pool.get_connection()
+    try:
+        connection = connection_pool.get_connection(timeout=connection_timeout)
+    except Exception as e:
+        logging.error(f"Error obtaining DB connection: {e}")
+        raise
+
     try:
         cursor = connection.cursor()
         query = "SELECT id, username, email FROM users WHERE username = ?"

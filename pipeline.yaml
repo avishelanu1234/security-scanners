@@ -33,7 +33,7 @@ jobs:
       - name: Install Bandit and detect-secrets
         run: |
           python -m pip install --upgrade pip
-          pip install bandit detect-secrets
+          pip install bandit==1.7.4 detect-secrets==1.0.3
 
       - name: Run Bandit SAST scan
         run: bandit -r . -f json -o bandit-report.json
@@ -86,8 +86,8 @@ jobs:
 
       - name: Start application
         run: |
-          # Replace with actual app startup command
-          ./start-application.sh &
+          # (Updated) Secure application start command
+          ./scripts/start_application.sh &
           # Health check loop to wait until app is ready
           for i in {1..30}; do
             if curl -sSf ${{ env.TARGET_URL }}/health; then
@@ -105,7 +105,7 @@ jobs:
 
       - name: Install OWASP ZAP
         run: |
-          sudo apt-get update && sudo apt-get install -y zaproxy
+          sudo apt-get update && sudo apt-get install -y zaproxy=2.11.1-1
 
       - name: Run OWASP ZAP baseline scan with authentication and API key
         env:

@@ -20,7 +20,15 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.x'
+          python-version: '3.9'
+
+      - name: Cache pip packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
 
       - name: Install Bandit
         run: |
@@ -28,13 +36,20 @@ jobs:
           pip install bandit
 
       - name: Run Bandit SAST scan
-        run: bandit -r . -f json -o bandit-report.json
+        run: bandit -r . -c bandit.yaml -f json -o bandit-report.json
+
+      - name: Fail on high severity issues
+        run: |
+          python -c "import json; report=json.load(open('bandit-report.json')); assert all(issue['issue_severity'] != 'HIGH' for issue in report['results']), 'High severity issues found!'
 
       - name: Upload Bandit scan report
         uses: actions/upload-artifact@v3
         with:
           name: bandit-report
           path: bandit-report.json
+
+      - name: Notify security team (placeholder)
+        run: echo "Notify security team with Bandit report"
 
   dast_scan:
     name: Dynamic Application Security Testing (DAST)
@@ -47,20 +62,34 @@ jobs:
 
       - name: Start application (example)
         run: |
-          # Example: Start your application here
-          # For demo, we'll just sleep
+          # TODO: Replace this with actual application start command
           sleep 10 &
+
+      - name: Wait for application to be ready
+        run: |
+          for i in {1..10}; do
+            curl -sSf http://localhost:8080 && break || sleep 5
+          done
 
       - name: Install OWASP ZAP
         run: |
           sudo apt-get update && sudo apt-get install -y zaproxy
 
-      - name: Run OWASP ZAP baseline scan
+      - name: Run OWASP ZAP full scan
         run: |
-          zap-baseline.py -t http://localhost:8080 -r zap-report.html
+          zap-full-scan.py -t http://localhost:8080 -r zap-report.html -f html,json -J zap-report.json
 
-      - name: Upload ZAP scan report
+      - name: Fail on critical vulnerabilities
+        run: |
+          python -c "import json; report=json.load(open('zap-report.json')); assert all(alert['risk'] != 'High' for alert in report['site'][0]['alerts']), 'Critical vulnerabilities found!'
+
+      - name: Upload ZAP scan reports
         uses: actions/upload-artifact@v3
         with:
           name: zap-report
-          path: zap-report.html
+          path: |
+            zap-report.html
+            zap-report.json
+
+      - name: Notify security team (placeholder)
+        run: echo "Notify security team with ZAP reports"

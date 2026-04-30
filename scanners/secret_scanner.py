@@ -7,10 +7,10 @@ import re
 
 class SecretScanner:
     def __init__(self):
-        # Refined regex pattern for hardcoded secrets
+        # Refined regex pattern for hardcoded secrets with word boundaries and stricter conditions
         self.hardcode_pattern = re.compile(
-            r"(?i)(api[-_]?key|apikey|token|secret|password|passwd|auth|access[-_]?key|secret[-_]?key|private[-_]?key|client[-_]?secret|client[-_]?key)\s*[:=]\s*['\"]"
-            r"[a-zA-Z0-9_\-\.\+=\/]{8,}['\"]"
+            r"(?i)\b(api[-_]?key|apikey|token|secret|password|passwd|auth|access[-_]?key|secret[-_]?key|private[-_]?key|client[-_]?secret|client[-_]?key)\b\s*[:=]\s*['\"]"
+            r"[a-zA-Z0-9_\-\.\+=\/]{12,}['\"]"
         )
 
     def scan_code(self, code: str) -> list[str]:

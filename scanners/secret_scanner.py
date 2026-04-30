@@ -8,15 +8,19 @@ import math
 
 class SecretScanner:
     def __init__(self):
-        # Further refined regex pattern for hardcoded secrets with exclusions for common non-secret keywords
-        # Added more exclusions like 'notoken', 'nopassword', 'password123', 'passphrase', 'apikeytest', etc.
-        # Increased minimum secret length to 30 characters to further reduce false positives
+        # Further refined regex pattern for hardcoded secrets with more exclusions for common non-secret keywords
+        # Added more exclusions like 'fake', 'bogus', 'null', 'none', '123456', '111111', '000000', 'test123', 'secretkeytest', 'temp', 'tempkey'
+        # Excluded common environment and config variable names
+        # Added stricter checks on secret value to require mixed case, digits, or special characters
+        # Increased minimum secret length to 30 characters
         # Added patterns for detecting AWS and Azure keys specifically
         self.hardcode_pattern = re.compile(
             r"""(?ix)                          # Ignore case, verbose mode
             \b                                # Word boundary
             (?!                              # Negative lookahead for excluded keywords
-                tokenize|passwordless|notoken|nopassword|password123|passphrase|apikeytest|secret123|dummy|example|changeme|default|sample|testkey|placeholder
+                tokenize|passwordless|notoken|nopassword|password123|passphrase|apikeytest|secret123|dummy|example|changeme|default|sample|testkey|placeholder|
+                fake|bogus|null|none|123456|111111|000000|test123|secretkeytest|temp|tempkey|
+                env|environment|config|setting|value|var|version
             )
             (api[-_ ]?key|apikey|token|secret|password|passwd|auth|access[-_ ]?key|
              secret[-_ ]?key|private[-_ ]?key|client[-_ ]?secret|client[-_ ]?key|aws_access_key_id|aws_secret_access_key|azure_key)
@@ -58,12 +62,15 @@ class SecretScanner:
             secret_value = re.search(r"['\"]([a-zA-Z0-9_\-\.\+=\/]{30,})['\"]", match.group(0))
             if secret_value:
                 secret_str = secret_value.group(1)
-                entropy = self._calculate_entropy(secret_str)
-                # Adjusted threshold entropy to consider it a likely secret (e.g., >4.5)
-                if entropy > 4.5:
-                    violations.append(
-                        f"Possible hardcoded secret detected: '{match.group(1)}'. Use secure secret management instead."
-                    )
+                # Stricter check: secret must have mixed case, digits, or special characters
+                if (re.search(r'[a-z]', secret_str) and re.search(r'[A-Z]', secret_str)) or \
+                   re.search(r'\d', secret_str) or re.search(r'[_\-\.\+=\/]', secret_str):
+                    entropy = self._calculate_entropy(secret_str)
+                    # Adjusted threshold entropy to consider it a likely secret (e.g., >4.5)
+                    if entropy > 4.5:
+                        violations.append(
+                            f"Possible hardcoded secret detected: '{match.group(1)}'. Use secure secret management instead."
+                        )
 
         return violations
 

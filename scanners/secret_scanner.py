@@ -10,20 +10,20 @@ class SecretScanner:
     def __init__(self):
         # Further refined regex pattern for hardcoded secrets with exclusions for common non-secret keywords
         # Added more exclusions like 'notoken', 'nopassword', 'password123', 'passphrase', 'apikeytest', etc.
-        # Increased minimum secret length to 30 characters to further reduce false positives
+        # Increased minimum secret length to 40 characters to further reduce false positives
         # Added patterns for detecting AWS and Azure keys specifically
         self.hardcode_pattern = re.compile(
             r"""(?ix)                          # Ignore case, verbose mode
             \b                                # Word boundary
             (?!                              # Negative lookahead for excluded keywords
-                tokenize|passwordless|notoken|nopassword|password123|passphrase|apikeytest|secret123|dummy|example|changeme|default|sample|testkey|placeholder
+                tokenize|passwordless|notoken|nopassword|password123|passphrase|apikeytest|secret123|dummy|example|changeme|default|sample|testkey|placeholder|dummykey|testsecret|dummyvalue|fakekey
             )
             (api[-_ ]?key|apikey|token|secret|password|passwd|auth|access[-_ ]?key|
              secret[-_ ]?key|private[-_ ]?key|client[-_ ]?secret|client[-_ ]?key|aws_access_key_id|aws_secret_access_key|azure_key)
             \b                               # Word boundary
             \s*[:=]\s*                       # Assignment operator with optional whitespace
-            (['"])                          # Opening quote (captured)
-            ([a-zA-Z0-9_\-\.\+=\/]{30,})    # Secret value with min length 30
+            (['\"])                          # Opening quote (captured)
+            ([a-zA-Z0-9_\-\.\+=\/]{40,})    # Secret value with min length 40
             \1                              # Matching closing quote
             """,
             re.VERBOSE | re.IGNORECASE
@@ -55,12 +55,12 @@ class SecretScanner:
         matches = self.hardcode_pattern.finditer(code)
         for match in matches:
             # Extract the secret value inside quotes
-            secret_value = re.search(r"['\"]([a-zA-Z0-9_\-\.\+=\/]{30,})['\"]", match.group(0))
+            secret_value = re.search(r"['\"]([a-zA-Z0-9_\-\.\+=\/]{40,})['\"]", match.group(0))
             if secret_value:
                 secret_str = secret_value.group(1)
                 entropy = self._calculate_entropy(secret_str)
-                # Adjusted threshold entropy to consider it a likely secret (e.g., >4.5)
-                if entropy > 4.5:
+                # Adjusted threshold entropy to consider it a likely secret (e.g., >5.0)
+                if entropy > 5.0:
                     violations.append(
                         f"Possible hardcoded secret detected: '{match.group(1)}'. Use secure secret management instead."
                     )
@@ -70,9 +70,9 @@ class SecretScanner:
 # Example usage
 if __name__ == '__main__':
     sample_code = """
-    api_key = '1234567890abcdef1234567890abcdef1234'
+    api_key = '1234567890abcdef1234567890abcdef1234567890'
     password: 'mypassword1234'
-    token = 'tokenvalue12345tokenvalue12345tokenvalue12345tokenvalue12345'
+    token = 'tokenvalue12345tokenvalue12345tokenvalue12345tokenvalue12345tokenvalue12345'
     aws_access_key_id = 'AKIAIOSFODNN7EXAMPLE'
     azure_key = 'abcdef1234567890abcdef1234567890'
     """

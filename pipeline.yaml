@@ -43,6 +43,14 @@ jobs:
           detect-secrets scan > .secrets.baseline
           detect-secrets audit .secrets.baseline --all-files --no-banner
 
+      - name: Run custom SAST runner
+        run: |
+          python scanners/sast_runner.py
+
+      - name: Run custom secret scanner
+        run: |
+          python -c "import scanners.secret_scanner as ss; import os, glob; \nfiles = glob.glob('**/*.py', recursive=True); \nscanner = ss.SecretScanner(); \nviolations = []; \nfor file in files: \n with open(file, 'r') as f: \n  code = f.read(); \n  violations.extend(scanner.scan_code(code)); \nif violations: \n print('Secrets detected:'); \n for v in violations: print(v); \n exit(1)"
+
       - name: Upload Bandit and Secrets scan reports
         uses: actions/upload-artifact@v3
         with:

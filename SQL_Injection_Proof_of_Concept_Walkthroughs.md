@@ -191,4 +191,163 @@ print(f"Sanitized input: {sanitized}")
 
 ---
 
-These walkthroughs provide practical demonstrations of how the detection rules and improvements work to prevent and detect SQL injection vulnerabilities.
+## 7. Advanced SQL Injection Payloads Walkthrough
+
+**Objective:** Demonstrate detection and prevention of advanced SQL injection payloads such as blind and time-based injection.
+
+```python
+import time
+import re
+import logging
+
+logging.basicConfig(level=logging.INFO)
+
+# Simulated function to detect time-based delay injection payloads
+
+def detect_advanced_sql_injection(input_string):
+    # Patterns to detect typical blind/time-based injection keywords
+    patterns = [r"(sleep\s*\()", r"(benchmark\s*\()", r"(waitfor\s+delay)", r"(or\s+1=1)", r"(union\s+select)"]
+    for pattern in patterns:
+        if re.search(pattern, input_string, re.IGNORECASE):
+            logging.warning(f"Advanced SQL injection pattern detected: {pattern}")
+            return True
+    return False
+
+# Test inputs
+inputs = [
+    "normalUser",
+    "admin' OR '1'='1' --",
+    "1; waitfor delay '00:00:05' --",
+    "username' UNION SELECT password FROM users --"
+]
+
+for inp in inputs:
+    print(f"Testing input: {inp}")
+    if detect_advanced_sql_injection(inp):
+        print("Advanced SQL injection detected.")
+    else:
+        print("Input passed validation.")
+```
+
+**Expected outcome:**
+- Injection payloads using time delays, union selects, or tautologies are detected and flagged.
+
+---
+
+## 8. Integration with MySQL Using Prepared Statements Walkthrough
+
+**Objective:** Show how to safely execute queries with MySQL using prepared statements.
+
+```python
+import mysql.connector
+
+# Setup connection
+conn = mysql.connector.connect(
+    host='localhost',
+    user='user',
+    password='password',
+    database='testdb'
+)
+cursor = conn.cursor()
+
+# Malicious input
+malicious_input = "admin'; DROP TABLE users; --"
+
+# Safe query using prepared statements
+query = "SELECT * FROM users WHERE username = %s"
+cursor.execute(query, (malicious_input,))
+results = cursor.fetchall()
+print("Query executed safely in MySQL.")
+
+cursor.close()
+conn.close()
+```
+
+**Expected outcome:**
+- Query executes without injection risk.
+
+---
+
+## 9. Integration with PostgreSQL Using Psycopg2 Walkthrough
+
+**Objective:** Demonstrate safe query execution in PostgreSQL using psycopg2 parameterized queries.
+
+```python
+import psycopg2
+
+# Setup connection
+conn = psycopg2.connect(dbname="testdb", user="user", password="password", host="localhost")
+cursor = conn.cursor()
+
+# Malicious input
+malicious_input = "admin'; DROP TABLE users; --"
+
+# Safe query
+cursor.execute("SELECT * FROM users WHERE username = %s", (malicious_input,))
+results = cursor.fetchall()
+print("Query executed safely in PostgreSQL.")
+
+cursor.close()
+conn.close()
+```
+
+**Expected outcome:**
+- Query executes safely without injection.
+
+---
+
+## 10. Integration with Django ORM Walkthrough
+
+**Objective:** Show how Django ORM automatically uses parameterized queries to prevent SQL injection.
+
+```python
+from django.contrib.auth.models import User
+
+# Malicious input
+malicious_input = "admin'; DROP TABLE users; --"
+
+# Safe query using Django ORM
+users = User.objects.filter(username=malicious_input)
+print(f"Found {users.count()} users with given username.")
+```
+
+**Expected outcome:**
+- Query safely executed without injection risk.
+
+---
+
+## 11. Integration with Flask and SQLAlchemy Walkthrough
+
+**Objective:** Demonstrate safe query construction with SQLAlchemy in Flask.
+
+```python
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+
+app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+db = SQLAlchemy(app)
+
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+
+with app.app_context():
+    db.create_all()
+    db.session.add(User(username='admin'))
+    db.session.commit()
+
+    malicious_input = "admin'; DROP TABLE users; --"
+    user = User.query.filter_by(username=malicious_input).first()
+    if user:
+        print(f"User found: {user.username}")
+    else:
+        print("No user found.")
+```
+
+**Expected outcome:**
+- Query safely executed with no injection risk.
+
+---
+
+These additional walkthroughs cover advanced SQL injection payloads and demonstrate integration with common database environments and web frameworks, further strengthening detection and prevention capabilities.

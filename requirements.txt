@@ -1,0 +1,7 @@
+# Dependency Manifest
+
+# List of dependencies for the security-scanners project.
+
+# Example dependencies
+# - requests
+# - flask

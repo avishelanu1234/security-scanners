@@ -5,3 +5,5 @@
 # Example dependencies
 # - requests
 # - flask
+
+# This manifest has been flagged for vulnerability audit.

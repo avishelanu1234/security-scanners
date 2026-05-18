@@ -53,11 +53,25 @@ def detect_vulnerabilities(user_input):
     vulnerabilities = []
     if SQL_INJECTION_PATTERN.search(user_input):
         vulnerabilities.append("Potential SQL Injection detected.")
+    
+    # Additional OWASP pattern detections
+    # Detect Cross-Site Scripting (XSS) patterns
+    if re.search(r'<script|<img|onerror=|onload=|javascript:', user_input, re.IGNORECASE):
+        vulnerabilities.append("Potential Cross-Site Scripting (XSS) detected.")
+    
+    # Detect Command Injection patterns
+    if re.search(r'\b(cat|ls|curl|wget|bash|sh|nc|netcat|python|perl|php|ruby|java|powershell|cmd)\b', user_input, re.IGNORECASE):
+        vulnerabilities.append("Potential Command Injection detected.")
+    
+    # Detect Path Traversal patterns
+    if re.search(r'(\.\./|/etc/passwd|/bin/bash)', user_input):
+        vulnerabilities.append("Potential Path Traversal detected.")
+    
     return vulnerabilities
 
 # Function to detect cloud-specific vulnerabilities
 def detect_cloud_vulnerabilities(user_input):
-    vulnerabilities = detect_vulnerabilities(user_input)  # Existing SQL injection check
+    vulnerabilities = detect_vulnerabilities(user_input)  # Existing SQL injection and new OWASP checks
     
     if AWS_CREDENTIAL_PATTERN.search(user_input):
         vulnerabilities.append("Potential AWS credential exposed.")

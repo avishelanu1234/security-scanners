@@ -1,0 +1,1 @@
+{"allowlist": [".*"], "rules": [{"description": "Generic secret rule","regex": "(?i)(?:secret|token|password|key|credential|api|private|ssh|jwt|access|auth|user|pass|db|database|login|email|username|client|secret_key|private_key|public_key|token)"}]}

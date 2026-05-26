@@ -1,1 +1,20 @@
-{"allowlist": [".*"], "rules": [{"description": "Generic secret rule","regex": "(?i)(?:secret|token|password|key|credential|api|private|ssh|jwt|access|auth|user|pass|db|database|login|email|username|client|secret_key|private_key|public_key|token)"}]}
+# Gitleaks Configuration
+
+# Gitleaks is a tool for detecting hardcoded secrets in git repositories.
+
+[[rules]]
+  description = "AWS Access Key"
+  regex = "(?i)AKIA[0-9A-Z]{16}"
+  tags = ["aws"]
+
+[[rules]]
+  description = "AWS Secret Key"
+  regex = "(?i)[0-9a-zA-Z/+]{40}"
+  tags = ["aws"]
+
+[[rules]]
+  description = "Google Cloud Key"
+  regex = "(?i)AIza[0-9A-Za-z-_]{35}"
+  tags = ["gcp"]
+
+# Add more rules as needed

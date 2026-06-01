@@ -1,0 +1,3 @@
+fix: add rate limiting to prevent brute force attacks
+
+related to #135
